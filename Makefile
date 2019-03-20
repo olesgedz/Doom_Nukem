@@ -6,11 +6,11 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/20 17:24:47 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/20 17:26:52 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = doom_nukem
+NAME = doom-nukem
 
 FLAGS = -g -O3
 CC = gcc
