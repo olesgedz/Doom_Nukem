@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/20 17:26:52 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/20 22:04:50 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,15 +20,15 @@ INCLUDES = -I$(HEADERS_DIRECTORY) -I$(LIBFT_HEADERS) -I$(SDL_HEADERS)
 LIBFT = $(LIBFT_DIRECTORY)libft.a
 LIBFT_DIRECTORY = ./libft/
 LIBFT_HEADERS = $(LIBFT_DIRECTORY)includes/
-SDL_HEADERS = include/
+SDL_HEADERS = SDL/
 
 HEADERS_DIRECTORY = ./includes/
 HEADERS_LIST = 
 HEADERS = $(addprefix $(HEADERS_DIRECTORY), $(HEADERS_LIST))
 
 DIRECTORY =  $(shell pwd)
-SDL_CFLAGS = $(shell sdl2-config --cflags)
-SDL_LDFLAGS = $(shell sdl2-config --libs)
+SDL_CFLAGS = $(shell sdl-config --cflags)
+SDL_LDFLAGS = $(shell sdl-config --libs)
 SDL_DIRECTORY = $(DIRECTORY)/lib
 SDL_MAKE = $(DIRECTORY)/SDL2
 
