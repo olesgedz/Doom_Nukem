@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <SDL.h>
+#include "SDL2/SDL.h"
 
 /* Define window size */
 #define W 608
@@ -98,12 +98,12 @@ static void UnloadData()
     NumSectors = 0;
 }
 
-static SDL_Surface* surface = NULL;
+static Uint32	 *surface = NULL;
 
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
 static void vline(int x, int y1,int y2, int top,int middle,int bottom)
 {
-    int *pix = (int*) surface->pixels;
+    int *pix = (int*) surface;
     y1 = clamp(y1, 0, H-1);
     y2 = clamp(y2, 0, H-1);
     if(y2 == y1)
@@ -256,25 +256,32 @@ static void DrawScreen()
     ++renderedsectors[now.sectorno];
     } while(head != tail); // render any other queued sectors
 }
-
+SDL_Window *window;
+SDL_Renderer *renderer;
+SDL_Texture *texture;
 int main()
 {
     LoadData();
-
-    surface = SDL_SetVideoMode(W, H, 32, 0);
-
-    SDL_EnableKeyRepeat(150, 30);
+    surface = malloc(sizeof(Uint32) * W * H);
+    SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
+    //SDL_EnableKeyRepeat(150, 30);
     SDL_ShowCursor(SDL_DISABLE);
-
+    texture = SDL_CreateTexture(renderer,
+                               SDL_PIXELFORMAT_ARGB8888,
+                               SDL_TEXTUREACCESS_STREAMING,
+                               W, H);
     int wsad[4]={0,0,0,0}, ground=0, falling=1, moving=0, ducking=0;
     float yaw = 0;
     for(;;)
     {
-        SDL_LockSurface(surface);
+        //SDL_LockSurface(surface);
         DrawScreen();
-        SDL_UnlockSurface(surface);
-        SDL_Flip(surface);
-
+        //  SDL_UnlockSurface(surface);
+        //   //  SDL_Flip(surface);
+        SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
         /* Vertical collision detection */
         float eyeheight = ducking ? DuckHeight : EyeHeight;
         ground = !falling;

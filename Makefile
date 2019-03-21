@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/20 22:04:50 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/21 20:47:46 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,15 +20,15 @@ INCLUDES = -I$(HEADERS_DIRECTORY) -I$(LIBFT_HEADERS) -I$(SDL_HEADERS)
 LIBFT = $(LIBFT_DIRECTORY)libft.a
 LIBFT_DIRECTORY = ./libft/
 LIBFT_HEADERS = $(LIBFT_DIRECTORY)includes/
-SDL_HEADERS = SDL/
+SDL_HEADERS = include/
 
 HEADERS_DIRECTORY = ./includes/
 HEADERS_LIST = 
 HEADERS = $(addprefix $(HEADERS_DIRECTORY), $(HEADERS_LIST))
 
 DIRECTORY =  $(shell pwd)
-SDL_CFLAGS = $(shell sdl-config --cflags)
-SDL_LDFLAGS = $(shell sdl-config --libs)
+SDL_CFLAGS = $(shell sdl2-config --cflags)
+SDL_LDFLAGS = $(shell sdl2-config --libs)
 SDL_DIRECTORY = $(DIRECTORY)/lib
 SDL_MAKE = $(DIRECTORY)/SDL2
 
@@ -62,7 +62,7 @@ RESET = \033[0m
 all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
-	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_LDFLAGS) $(SDL_LDFLAGS) -o $(NAME)
+	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
 	@echo "\n$(NAME): $(GREEN)object files were created$(RESET)"
 	@echo "$(NAME): $(GREEN)$(NAME) was created$(RESET)"
 
