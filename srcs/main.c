@@ -99,7 +99,6 @@ static void UnloadData()
 }
 
 static Uint32	 *surface = NULL;
-
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
 static void vline(int x, int y1,int y2, int top,int middle,int bottom)
 {
@@ -259,12 +258,13 @@ static void DrawScreen()
 SDL_Window *window;
 SDL_Renderer *renderer;
 SDL_Texture *texture;
+
+
 int main()
 {
     LoadData();
     surface = malloc(sizeof(Uint32) * W * H);
     SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
-    //SDL_EnableKeyRepeat(150, 30);
     SDL_ShowCursor(SDL_DISABLE);
     texture = SDL_CreateTexture(renderer,
                                SDL_PIXELFORMAT_ARGB8888,
@@ -274,10 +274,7 @@ int main()
     float yaw = 0;
     for(;;)
     {
-        //SDL_LockSurface(surface);
         DrawScreen();
-        //  SDL_UnlockSurface(surface);
-        //   //  SDL_Flip(surface);
         SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
