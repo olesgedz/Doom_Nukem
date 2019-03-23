@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/23 16:28:28 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/23 17:05:04 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -63,15 +63,14 @@ ifneq ($(words $(MAKECMDGOALS)),1)
 		@$(MAKE) $@ --no-print-directory -rRf $(firstword $(MAKEFILE_LIST))
 else
 ifndef ECHO
-T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
-		-nrRf $(firstword $(MAKEFILE_LIST)) \
-		ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
-
+#T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
+#		-nrRf $(firstword $(MAKEFILE_LIST)) \
+#		ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
+T = 2
 N := x
 C = $(words $N)$(eval N := x $N)
-ECHO = echo -ne "\r [`expr 1 '*' 100 / 1`%]"
+ECHO = echo -ne "\r [`expr $C '*' 200 / $T`%]"
 endif
-
 
 
 .PHONY: all clean fclean re
@@ -81,9 +80,6 @@ all: $(NAME)
 $(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
 	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
 	@echo "\n$(NAME): $(GREEN)object files were created$(RESET)"
-	@echo $(L)
-	@echo $(E) 
-	@$(ECHO)
 	@echo "$(NAME): $(GREEN)$(NAME) was created$(RESET)"
 
 $(OBJS_DIRECTORY):
