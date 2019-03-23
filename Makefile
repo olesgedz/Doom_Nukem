@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/23 17:05:04 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/23 18:45:22 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -79,12 +79,12 @@ all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
 	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
-	@echo "\n$(NAME): $(GREEN)object files were created$(RESET)"
-	@echo "$(NAME): $(GREEN)$(NAME) was created$(RESET)"
+	@echo "\r $(NAME): $(GREEN)object files were created$(RESET)"
+	@echo "\r $(NAME): $(GREEN)$(NAME) was created$(RESET)"
 
 $(OBJS_DIRECTORY):
 	@mkdir -p $(OBJS_DIRECTORY)
-	@echo "$(NAME): $(GREEN)$(OBJS_DIRECTORY) was created$(RESET)"
+	@echo "\r $(NAME): $(GREEN)$(OBJS_DIRECTORY) was created$(RESET)"
 
 $(OBJS_DIRECTORY)%.o : $(SRCS_DIRECTORY)%.c $(HEADERS)
 	@$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
