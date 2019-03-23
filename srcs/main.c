@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "SDL2/SDL.h"
-
+#include "libft.h"
 /* Define window size */
 #define W 1280
 #define H 720
@@ -235,7 +235,7 @@ static void DrawScreen()
                 vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0); // Between our and their ceiling
                 ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
                 /* If our floor is lower than their floor, render bottom wall */
-                vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
+              	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
                 ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
             }
             else
@@ -274,6 +274,7 @@ int main()
     float yaw = 0;
     for(;;)
     {
+
         DrawScreen();
         SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
         SDL_RenderClear(renderer);
