@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/21 20:47:46 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/23 16:28:28 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -57,6 +57,23 @@ GREEN = \033[0;32m
 RED = \033[0;31m
 RESET = \033[0m
 
+ifneq ($(words $(MAKECMDGOALS)),1)
+.DEFAULT_GOAL = all
+%:
+		@$(MAKE) $@ --no-print-directory -rRf $(firstword $(MAKEFILE_LIST))
+else
+ifndef ECHO
+T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
+		-nrRf $(firstword $(MAKEFILE_LIST)) \
+		ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
+
+N := x
+C = $(words $N)$(eval N := x $N)
+ECHO = echo -ne "\r [`expr 1 '*' 100 / 1`%]"
+endif
+
+
+
 .PHONY: all clean fclean re
 
 all: $(NAME)
@@ -64,6 +81,9 @@ all: $(NAME)
 $(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
 	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
 	@echo "\n$(NAME): $(GREEN)object files were created$(RESET)"
+	@echo $(L)
+	@echo $(E) 
+	@$(ECHO)
 	@echo "$(NAME): $(GREEN)$(NAME) was created$(RESET)"
 
 $(OBJS_DIRECTORY):
@@ -72,7 +92,7 @@ $(OBJS_DIRECTORY):
 
 $(OBJS_DIRECTORY)%.o : $(SRCS_DIRECTORY)%.c $(HEADERS)
 	@$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
-	@echo "$(GREEN).$(RESET)\c"
+	@$(ECHO) Compiling $@
 
 sdl:
 	@echo "sad"
@@ -92,7 +112,7 @@ clean:
 	@rm -rf $(OBJS_DIRECTORY)
 	@echo "$(NAME): $(RED)$(OBJECTS_DIRECTORY) was deleted$(RESET)"
 	@echo "$(NAME): $(RED)object files were deleted$(RESET)"
-	@$(MAKE) -sC $(SDL_MAKE) clean
+	#@$(MAKE) -sC $(SDL_MAKE) clean
 	@echo "$(SDL_MAKE): $(RED)object files were deleted$(RESET)"
 
 dd:
@@ -103,16 +123,17 @@ fclean: clean
 	@echo "$(NAME): $(RED)$(LIBFT) was deleted$(RESET)"
 	@rm -f $(NAME)
 	@echo "$(NAME): $(RED)$(NAME) was deleted$(RESET)"
-	@rm -f $(DIRECTORY)/bin/sdl2-config
-	@rm -f $(DIRECTORY)/lib/libSDL2.la
-	@rm -f $(DIRECTORY)/lib/libSDL2main.la
-	@rm -f $(DIRECTORY)/lib/libSDL2_test.la
-	@rm -f $(DIRECTORY)/share/aclocal/sdl2.m4
-	@rm -f $(DIRECTORY)/lib/pkgconfig/sdl2.pc
-	@rm -f $(DIRECTORY)/lib/cmake/SDL2/sdl2-config.cmake
-	@rm -rf lib bin share
-	@echo "$(SDL_MAKE): $(RED)was unistalled$(RESET)"
+	#@rm -f $(DIRECTORY)/bin/sdl2-config
+	#@rm -f $(DIRECTORY)/lib/libSDL2.la
+	#@rm -f $(DIRECTORY)/lib/libSDL2main.la
+	#@rm -f $(DIRECTORY)/lib/libSDL2_test.la
+	#@rm -f $(DIRECTORY)/share/aclocal/sdl2.m4
+	#@rm -f $(DIRECTORY)/lib/pkgconfig/sdl2.pc
+	#@rm -f $(DIRECTORY)/lib/cmake/SDL2/sdl2-config.cmake
+	#@rm -rf lib bin share
+	#@echo "$(SDL_MAKE): $(RED)was unistalled$(RESET)"
 
 re:
 	@$(MAKE) fclean
 	@$(MAKE) all
+endif
