@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include "SDL2/SDL.h"
-#include "libft.h"
+
 /* Define window size */
 #define W 1280
-#define H 2560
+#define H 720
 /* Define various vision related constants */
 #define EyeHeight  6    // Camera height from floor when standing
 #define DuckHeight 2.5  // And when crouching
@@ -274,7 +274,6 @@ int main()
     float yaw = 0;
     for(;;)
     {
-        ft_bzero(surface, 4 * W * H);
         DrawScreen();
         SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
         SDL_RenderClear(renderer);
@@ -367,7 +366,7 @@ int main()
         int x,y;
         SDL_GetRelativeMouseState(&x,&y);
         player.angle += x * 0.03f;
-        yaw          = clamp(yaw - (-y)*0.05f, -5, 5);
+        yaw          = clamp(yaw + y*0.05f, -5, 5);
         player.yaw   = yaw - player.velocity.z*0.5f;
         MovePlayer(0,0);
 
