@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/28 18:47:13 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/28 19:13:24 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -70,7 +70,7 @@ COL_WHITE	:= \033[1;37m
 TOTAL_FILES := $(shell echo $(SRCS_LIST) | wc -w | sed -e 's/ //g')
 CURRENT_FILES = $(shell find $(DIRECTORY)/objects/ -type f 2> /dev/null | wc -l | sed -e 's/ //g')
 
-.PHONY: all clean fclean re
+.PHONY: clean fclean re
 
 all: $(NAME)
 
