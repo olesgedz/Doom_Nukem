@@ -253,7 +253,7 @@ static void DrawScreen()
         }
     } // for s in sector's edges
     ++renderedsectors[now.sectorno];
-    } while(head != tail); // render any other queued sectors
+    } while (head != tail); // render any other queued sectors
 }
 SDL_Window *window;
 SDL_Renderer *renderer;

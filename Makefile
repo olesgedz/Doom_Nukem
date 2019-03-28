@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/03/23 18:45:22 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/03/28 18:47:13 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -56,22 +56,19 @@ err = no
 GREEN = \033[0;32m
 RED = \033[0;31m
 RESET = \033[0m
+CLEAR_LINE	:= \033[2K
+BEGIN_LINE	:= \033[A
+COL_END		:= \033[0m
+COL_RED		:= \033[1;31m
+COL_GREEN	:= \033[1;32m
+COL_YELLOW	:= \033[1;33m
+COL_BLUE	:= \033[1;34m
+COL_VIOLET	:= \033[1;35m
+COL_CYAN	:= \033[1;36m
+COL_WHITE	:= \033[1;37m
 
-ifneq ($(words $(MAKECMDGOALS)),1)
-.DEFAULT_GOAL = all
-%:
-		@$(MAKE) $@ --no-print-directory -rRf $(firstword $(MAKEFILE_LIST))
-else
-ifndef ECHO
-#T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
-#		-nrRf $(firstword $(MAKEFILE_LIST)) \
-#		ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
-T = 2
-N := x
-C = $(words $N)$(eval N := x $N)
-ECHO = echo -ne "\r [`expr $C '*' 200 / $T`%]"
-endif
-
+TOTAL_FILES := $(shell echo $(SRCS_LIST) | wc -w | sed -e 's/ //g')
+CURRENT_FILES = $(shell find $(DIRECTORY)/objects/ -type f 2> /dev/null | wc -l | sed -e 's/ //g')
 
 .PHONY: all clean fclean re
 
@@ -79,16 +76,19 @@ all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
 	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
-	@echo "\r $(NAME): $(GREEN)object files were created$(RESET)"
-	@echo "\r $(NAME): $(GREEN)$(NAME) was created$(RESET)"
+	@echo "$(CLEAR_LINE)$(COL_BLUE)[$(NAME)] $(COL_GREEN)Finished compilation. Output file : $(COL_VIOLET)$(PWD)/$(NAME)$(COL_END)"
 
 $(OBJS_DIRECTORY):
 	@mkdir -p $(OBJS_DIRECTORY)
-	@echo "\r $(NAME): $(GREEN)$(OBJS_DIRECTORY) was created$(RESET)"
+
 
 $(OBJS_DIRECTORY)%.o : $(SRCS_DIRECTORY)%.c $(HEADERS)
 	@$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
-	@$(ECHO) Compiling $@
+	@echo "$(CLEAR_LINE)\r [`expr $(CURRENT_FILES) '*' 100 / $(TOTAL_FILES)`%] $(COL_BLUE)[$(NAME)] $(COL_GREEN)Compiling file [$(COL_VIOLET)$<$(COL_GREEN)].($(CURRENT_FILES) / $(TOTAL_FILES))$(COL_END)$(BEGIN_LINE)"
+
+count:
+	@echo $(TOTAL_FILES)
+	@echo $(CURRENT_FILES)
 
 sdl:
 	@echo "sad"
@@ -132,4 +132,3 @@ fclean: clean
 re:
 	@$(MAKE) fclean
 	@$(MAKE) all
-endif
