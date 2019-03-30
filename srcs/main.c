@@ -224,26 +224,26 @@ static void DrawScreen()
 			/* Render floor: everything below this sector's floor height. */
 			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF);
 
-			// /* Is there another sector behind this edge? */
-			// if(neighbor >= 0)
-			// {
-			// 	/* Same for _their_ floor and ceiling */
-			// 	int nya = (x - x1) * (ny2a-ny1a) / (x2-x1) + ny1a, cnya = clamp(nya, ytop[x],ybottom[x]);
-			// 	int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
-			// 	/* If our ceiling is higher than their ceiling, render upper wall */
-			// 	unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
-			// 	vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0); // Between our and their ceiling
-			// 	ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
-			// 	/* If our floor is lower than their floor, render bottom wall */
-			//   	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
-			// 	ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
-			// }
-			// else
-			// {
-			// 	/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
-			// 	unsigned r = 0x010101 * (255-z);
-			// 	vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
-			// }
+			/* Is there another sector behind this edge? */
+			if(neighbor >= 0)
+			{
+				/* Same for _their_ floor and ceiling */
+				int nya = (x - x1) * (ny2a-ny1a) / (x2-x1) + ny1a, cnya = clamp(nya, ytop[x],ybottom[x]);
+				int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
+				/* If our ceiling is higher than their ceiling, render upper wall */
+				unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
+				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0); // Between our and their ceiling
+				ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
+				/* If our floor is lower than their floor, render bottom wall */
+			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
+				ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
+			}
+			else
+			{
+				/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
+				unsigned r = 0x010101 * (255-z);
+				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
+			}
 			unsigned r = 0x010101 * (255-z);
 			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
 		}
