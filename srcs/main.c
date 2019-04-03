@@ -281,9 +281,10 @@ void ft_render (unsigned short* buf, float xa, float ya, float za)
 	}
 	for (int i = 0; i<4; i++)         // Actual drawing
 	{
-		vline(scrx[i], scry[i], scrx[i+4], scry[i+4], 0xFF0000, 0xFF0000);
-		vline (scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4],0xFF0000, 0xFF0000);
-		vline (scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4], 0xFF0000, 0xFF0000);
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		 SDL_RenderDrawLine(renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
+		 SDL_RenderDrawLine(renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
+		 SDL_RenderDrawLine(renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
 	}
 }
 
@@ -310,11 +311,13 @@ int main()
 	for(;;)
 	{
 		bzero(surface, sizeof(Uint32) * W * H);
-		ft_render(&buf, angle, 90-angle, 0);
-		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
+		//ft_render(&buf, angle, 90-angle, 0);
+		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
 		SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
+		//SDL_RenderCopy(renderer, texture, NULL, NULL);
+		ft_render(&buf, angle, 360-angle, 0);
 		SDL_RenderPresent(renderer);
 		/* Vertical collision detection */
 		float eyeheight = ducking ? DuckHeight : EyeHeight;
@@ -388,6 +391,7 @@ int main()
 						case 'a': wsad[2] = ev.type==SDL_KEYDOWN; break;
 						case 'd': wsad[3] = ev.type==SDL_KEYDOWN; break;
 						case 'q': goto done;
+						case 'v': angle+=15; break;
 						case ' ': /* jump */
 							if(ground) { player.velocity.z += 0.5; falling = 1; }
 							break;
