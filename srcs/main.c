@@ -3,6 +3,7 @@
 #include <math.h>
 #include "SDL2/SDL.h"
 #include "libft.h"
+//http://www.flipcode.com/archives/Building_a_3D_Portal_Engine-Issue_05_Coding_A_Wireframe_Cube.shtml
 /* Define window size */
 #define W 1280
 #define H 720
@@ -260,54 +261,42 @@ static void DrawScreen()
 SDL_Window *window;
 SDL_Renderer *renderer;
 SDL_Texture *texture;
-	float angle, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
+float angle, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
 
-  void render (unsigned short* buf, float xa, float ya, float za)
-       {  float mat[4][4];            // Determine rotation matrix
-          float xdeg=xa*3.1416f/180, ydeg=ya*3.1416f/180, zdeg=za*3.1416f/180;
-          float sx=(float)sin(xdeg), sy=(float)sin(ydeg), sz=(float)sin(zdeg);
-          float cx=(float)cos(xdeg), cy=(float)cos(ydeg), cz=(float)cos(zdeg);
-          mat[0][0]=cx*cz+sx*sy*sz, mat[1][0]=-cx*sz+cz*sx*sy, mat[2][0]=cy*sx;
-          mat[0][1]=cy*sz, mat[1][1]=cy*cz, mat[2][1]=-sy;
-          mat[0][2]=-cz*sx+cx*sy*sz, mat[1][2]=sx*sz+cx*cz*sy, mat[2][2]=cx*cy;
-          for (int i=0; i<8; i++)     // Rotate and apply perspective
-          {  rx[i]=x[i]*mat[0][0]+y[i]*mat[1][0]+z[i]*mat[2][0];
-             ry[i]=x[i]*mat[0][1]+y[i]*mat[1][1]+z[i]*mat[2][1];
-             rz[i]=x[i]*mat[0][2]+y[i]*mat[1][2]+z[i]*mat[2][2]+300;
-             scrx[i]=(rx[i]*500)/rz[i]+320, scry[i]=(ry[i]*500)/rz[i]+240;
-          }
-          for (i=0; i<4; i++)         // Actual drawing
-          {  line (buf, scrx[i], scry[i], scrx[i+4], scry[i+4]);
-             line (buf, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
-             line (buf, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
-          }
-       }
+void ft_render (unsigned short* buf, float xa, float ya, float za)
+{ 
+	float mat[4][4];            // Determine rotation matrix
+	float xdeg=xa*3.1416f/180, ydeg=ya*3.1416f/180, zdeg=za*3.1416f/180;
+	float sx=(float)sin(xdeg), sy=(float)sin(ydeg), sz=(float)sin(zdeg);
+	float cx=(float)cos(xdeg), cy=(float)cos(ydeg), cz=(float)cos(zdeg);
+	mat[0][0]=cx*cz+sx*sy*sz, mat[1][0]=-cx*sz+cz*sx*sy, mat[2][0]=cy*sx;
+	mat[0][1]=cy*sz, mat[1][1]=cy*cz, mat[2][1]=-sy;
+	mat[0][2]=-cz*sx+cx*sy*sz, mat[1][2]=sx*sz+cx*cz*sy, mat[2][2]=cx*cy;
+	for (int i=0; i<8; i++)     // Rotate and apply perspective
+	{
+		rx[i]=x[i]*mat[0][0]+y[i]*mat[1][0]+z[i]*mat[2][0];
+		ry[i]=x[i]*mat[0][1]+y[i]*mat[1][1]+z[i]*mat[2][1];
+		rz[i]=x[i]*mat[0][2]+y[i]*mat[1][2]+z[i]*mat[2][2]+300;
+		scrx[i]=(rx[i]*500)/rz[i]+320, scry[i]=(ry[i]*500)/rz[i]+240;
+	}
+	for (int i = 0; i<4; i++)         // Actual drawing
+	{
+		vline(scrx[i], scry[i], scrx[i+4], scry[i+4], 0xFF0000, 0xFF0000);
+		vline (scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4],0xFF0000, 0xFF0000);
+		vline (scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4], 0xFF0000, 0xFF0000);
+	}
+}
 
 
-       int APIENTRY WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nCmdShow)
-       {  for (int i=0; i<8; i++)     // Define the cube
-          {  x[i]=(float)(50-100*(((i+1)/2)%2));
-             y[i]=(float)(50-100*((i/2)%2)), z[i]=(float)(50-100*((i/4)%2));
-          }
-          Console console;            // Initialize PTC and start rendering
-          Format format (16, 31<<11, 63<<5, 31);
-          console.open ("3D", 640, 480, format);
-          Surface surface (640, 480, format);
-          while (!console.key ())
-          {  unsigned short* buf=(unsigned short*)surface.lock ();
-             memset (buf, 0, 640*480*2);
-             render (buf, angle, 360-angle, 0);
-             angle+=0.2f; if (angle==360) angle=0;
-             surface.unlock();
-             surface.copy (console);
-             console.update();
-          }
-          return 0;
-       }
- 
+   
 
 int main()
 {
+ 		for (int i=0; i<8; i++)     // Define the cube
+		  {  x[i]=(float)(50-100*(((i+1)/2)%2));
+			 y[i]=(float)(50-100*((i/2)%2)), z[i]=(float)(50-100*((i/4)%2));
+		  }
+		  unsigned short buf = 0;
 	LoadData();
 	surface = malloc(sizeof(Uint32) * W * H);
 	SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
@@ -321,7 +310,7 @@ int main()
 	for(;;)
 	{
 		bzero(surface, sizeof(Uint32) * W * H);
-		ft_draw();
+		ft_render(&buf, angle, 90-angle, 0);
 		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
 		SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
 		SDL_RenderClear(renderer);
