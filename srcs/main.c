@@ -3,6 +3,7 @@
 #include <math.h>
 #include "SDL2/SDL.h"
 #include "libft.h"
+#include "doom_nukem.h"
 //http://www.flipcode.com/archives/Building_a_3D_Portal_Engine-Issue_05_Coding_A_Wireframe_Cube.shtml
 /* Define window size */
 #define W 1280
@@ -288,146 +289,168 @@ void ft_render (unsigned short* buf, float xa, float ya, float za)
 	}
 }
 
-
-   
+void	ft_plane (t_point3d *c1, t_point3d *c2, t_point3d *c3)
+{
+	double A = 0, B = 0, C = 0, D;
+	double rx1=c2->x-c1->x;
+	double ry1=c2->y-c1->y;
+	double rz1=c2->z-c1->z;
+	double rx2=c3->x-c1->x;
+	double ry2=c3->y-c1->y;
+	double rz2=c3->z-c1->z;
+	A=ry1*rz2-ry2*rz1;
+	B=rz1*rx2-rz2*rx1;
+	C=rx1*ry2-rx2*ry1;
+	double len=sqrt(A*A+B*B+C*C);
+	A=A/len; B=B/len; C=C/len;
+	D=A*c2->x+B*c2->y+C*c2->z;
+	double dot = A * 1 + B * 1 + C * 0 - D; 
+	printf("DOT:%f D:%f, A:%f, B:%f, C:%f\n", dot, D, A, B, C);
+}
 
 int main()
 {
- 		for (int i=0; i<8; i++)     // Define the cube
-		  {  x[i]=(float)(50-100*(((i+1)/2)%2));
-			 y[i]=(float)(50-100*((i/2)%2)), z[i]=(float)(50-100*((i/4)%2));
-		  }
-		  unsigned short buf = 0;
-	LoadData();
-	surface = malloc(sizeof(Uint32) * W * H);
-	SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
-	SDL_ShowCursor(SDL_DISABLE);
-	texture = SDL_CreateTexture(renderer,
-							   SDL_PIXELFORMAT_ARGB8888,
-							   SDL_TEXTUREACCESS_STREAMING,
-							   W, H);
-	int wsad[4]={0,0,0,0}, ground=0, falling=1, moving=0, ducking=0;
-	float yaw = 0;
-	for(;;)
-	{
-		bzero(surface, sizeof(Uint32) * W * H);
-		//ft_render(&buf, angle, 90-angle, 0);
-		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
-		SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
-		//SDL_RenderCopy(renderer, texture, NULL, NULL);
-		ft_render(&buf, angle, 360-angle, 0);
-		SDL_RenderPresent(renderer);
-		/* Vertical collision detection */
-		float eyeheight = ducking ? DuckHeight : EyeHeight;
-		ground = !falling;
-		if(falling)
-		{
-			player.velocity.z -= 0.05f; /* Add gravity */
-			float nextz = player.where.z + player.velocity.z;
-			if(player.velocity.z < 0 && nextz  < sectors[player.sector].floor + eyeheight) // When going down
-			{
-				/* Fix to ground */
-				player.where.z    = sectors[player.sector].floor + eyeheight;
-				player.velocity.z = 0;
-				falling = 0;
-				ground  = 1;
-			}
-			else if(player.velocity.z > 0 && nextz > sectors[player.sector].ceil) // When going up
-			{
-				/* Prevent jumping above ceiling */
-				player.velocity.z = 0;
-				falling = 1;
-			}
-			if(falling)
-			{
-				player.where.z += player.velocity.z;
-				moving = 1;
-			}
-		}
-		/* Horizontal collision detection */
-		if(moving)
-		{
-			float px = player.where.x,    py = player.where.y;
-			float dx = player.velocity.x, dy = player.velocity.y;
-
-			const struct sector* const sect = &sectors[player.sector];
-			const struct xy* const vert = sect->vertex;
-			/* Check if the player is about to cross one of the sector's edges */
-			for(unsigned s = 0; s < sect->npoints; ++s)
-				if(IntersectBox(px,py, px+dx,py+dy, vert[s+0].x, vert[s+0].y, vert[s+1].x, vert[s+1].y)
-				&& PointSide(px+dx, py+dy, vert[s+0].x, vert[s+0].y, vert[s+1].x, vert[s+1].y) < 0)
-				{
-					/* Check where the hole is. */
-					float hole_low  = sect->neighbors[s] < 0 ?  9e9 : max(sect->floor, sectors[sect->neighbors[s]].floor);
-					float hole_high = sect->neighbors[s] < 0 ? -9e9 : min(sect->ceil,  sectors[sect->neighbors[s]].ceil );
-					/* Check whether we're bumping into a wall. */
-					if(hole_high < player.where.z+HeadMargin
-					|| hole_low  > player.where.z-eyeheight+KneeHeight)
-					{
-						/* Bumps into a wall! Slide along the wall. */
-						/* This formula is from Wikipedia article "vector projection". */
-						float xd = vert[s+1].x - vert[s+0].x, yd = vert[s+1].y - vert[s+0].y;
-						dx = xd * (dx*xd + yd*dy) / (xd*xd + yd*yd);
-						dy = yd * (dx*xd + yd*dy) / (xd*xd + yd*yd);
-						moving = 0;
-					}
-				}
-			MovePlayer(dx, dy);
-			falling = 1;
-		}
-
-		SDL_Event ev;
-		while(SDL_PollEvent(&ev))
-			switch(ev.type)
-			{
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					switch(ev.key.keysym.sym)
-					{
-						case 'w': wsad[0] = ev.type==SDL_KEYDOWN; break;
-						case 's': wsad[1] = ev.type==SDL_KEYDOWN; break;
-						case 'a': wsad[2] = ev.type==SDL_KEYDOWN; break;
-						case 'd': wsad[3] = ev.type==SDL_KEYDOWN; break;
-						case 'q': goto done;
-						case 'v': angle+=5; break;
-						case ' ': /* jump */
-							if(ground) { player.velocity.z += 0.5; falling = 1; }
-							break;
-						case SDLK_LCTRL: /* duck */
-						case SDLK_RCTRL: ducking = ev.type==SDL_KEYDOWN; falling=1; break;
-						default: break;
-					}
-					break;
-				case SDL_QUIT: goto done;
-			}
-
-		/* mouse aiming */
-		int x,y;
-		SDL_GetRelativeMouseState(&x,&y);
-		player.angle += x * 0.03f;
-		yaw          = clamp(yaw + y*0.05f, -5, 5);
-		player.yaw   = yaw - player.velocity.z*0.5f;
-		MovePlayer(0,0);
-
-		float move_vec[2] = {0.f, 0.f};
-		if(wsad[0]) { move_vec[0] += player.anglecos*0.2f; move_vec[1] += player.anglesin*0.2f; }
-		if(wsad[1]) { move_vec[0] -= player.anglecos*0.2f; move_vec[1] -= player.anglesin*0.2f; }
-		if(wsad[2]) { move_vec[0] += player.anglesin*0.2f; move_vec[1] -= player.anglecos*0.2f; }
-		if(wsad[3]) { move_vec[0] -= player.anglesin*0.2f; move_vec[1] += player.anglecos*0.2f; }
-		int pushing = wsad[0] || wsad[1] || wsad[2] || wsad[3];
-		float acceleration = pushing ? 0.4 : 0.2;
-
-		player.velocity.x = player.velocity.x * (1-acceleration) + move_vec[0] * acceleration;
-		player.velocity.y = player.velocity.y * (1-acceleration) + move_vec[1] * acceleration;
-
-		if(pushing) moving = 1;
-
-		//SDL_Delay(10);
-	}
-done:
-	UnloadData();
-	SDL_Quit();
-	return 0;
+	ft_plane(&(t_point3d){0,0,0}, &(t_point3d){1,1,1}, &(t_point3d){1,1,0});
 }
+   
+
+// int main()
+// {
+//  		for (int i=0; i<8; i++)     // Define the cube
+// 		  {  x[i]=(float)(50-100*(((i+1)/2)%2));
+// 			 y[i]=(float)(50-100*((i/2)%2)), z[i]=(float)(50-100*((i/4)%2));
+// 		  }
+// 		  unsigned short buf = 0;
+// 	LoadData();
+// 	surface = malloc(sizeof(Uint32) * W * H);
+// 	SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
+// 	SDL_ShowCursor(SDL_DISABLE);
+// 	texture = SDL_CreateTexture(renderer,
+// 							   SDL_PIXELFORMAT_ARGB8888,
+// 							   SDL_TEXTUREACCESS_STREAMING,
+// 							   W, H);
+// 	int wsad[4]={0,0,0,0}, ground=0, falling=1, moving=0, ducking=0;
+// 	float yaw = 0;
+// 	for(;;)
+// 	{
+// 		bzero(surface, sizeof(Uint32) * W * H);
+// 		//ft_render(&buf, angle, 90-angle, 0);
+// 		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
+// 		SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
+// 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+// 		SDL_RenderClear(renderer);
+// 		//SDL_RenderCopy(renderer, texture, NULL, NULL);
+// 		ft_render(&buf, angle, 360-angle, 0);
+// 		SDL_RenderPresent(renderer);
+// 		/* Vertical collision detection */
+// 		float eyeheight = ducking ? DuckHeight : EyeHeight;
+// 		ground = !falling;
+// 		if(falling)
+// 		{
+// 			player.velocity.z -= 0.05f; /* Add gravity */
+// 			float nextz = player.where.z + player.velocity.z;
+// 			if(player.velocity.z < 0 && nextz  < sectors[player.sector].floor + eyeheight) // When going down
+// 			{
+// 				/* Fix to ground */
+// 				player.where.z    = sectors[player.sector].floor + eyeheight;
+// 				player.velocity.z = 0;
+// 				falling = 0;
+// 				ground  = 1;
+// 			}
+// 			else if(player.velocity.z > 0 && nextz > sectors[player.sector].ceil) // When going up
+// 			{
+// 				/* Prevent jumping above ceiling */
+// 				player.velocity.z = 0;
+// 				falling = 1;
+// 			}
+// 			if(falling)
+// 			{
+// 				player.where.z += player.velocity.z;
+// 				moving = 1;
+// 			}
+// 		}
+// 		/* Horizontal collision detection */
+// 		if(moving)
+// 		{
+// 			float px = player.where.x,    py = player.where.y;
+// 			float dx = player.velocity.x, dy = player.velocity.y;
+
+// 			const struct sector* const sect = &sectors[player.sector];
+// 			const struct xy* const vert = sect->vertex;
+// 			/* Check if the player is about to cross one of the sector's edges */
+// 			for(unsigned s = 0; s < sect->npoints; ++s)
+// 				if(IntersectBox(px,py, px+dx,py+dy, vert[s+0].x, vert[s+0].y, vert[s+1].x, vert[s+1].y)
+// 				&& PointSide(px+dx, py+dy, vert[s+0].x, vert[s+0].y, vert[s+1].x, vert[s+1].y) < 0)
+// 				{
+// 					/* Check where the hole is. */
+// 					float hole_low  = sect->neighbors[s] < 0 ?  9e9 : max(sect->floor, sectors[sect->neighbors[s]].floor);
+// 					float hole_high = sect->neighbors[s] < 0 ? -9e9 : min(sect->ceil,  sectors[sect->neighbors[s]].ceil );
+// 					/* Check whether we're bumping into a wall. */
+// 					if(hole_high < player.where.z+HeadMargin
+// 					|| hole_low  > player.where.z-eyeheight+KneeHeight)
+// 					{
+// 						/* Bumps into a wall! Slide along the wall. */
+// 						/* This formula is from Wikipedia article "vector projection". */
+// 						float xd = vert[s+1].x - vert[s+0].x, yd = vert[s+1].y - vert[s+0].y;
+// 						dx = xd * (dx*xd + yd*dy) / (xd*xd + yd*yd);
+// 						dy = yd * (dx*xd + yd*dy) / (xd*xd + yd*yd);
+// 						moving = 0;
+// 					}
+// 				}
+// 			MovePlayer(dx, dy);
+// 			falling = 1;
+// 		}
+
+// 		SDL_Event ev;
+// 		while(SDL_PollEvent(&ev))
+// 			switch(ev.type)
+// 			{
+// 				case SDL_KEYDOWN:
+// 				case SDL_KEYUP:
+// 					switch(ev.key.keysym.sym)
+// 					{
+// 						case 'w': wsad[0] = ev.type==SDL_KEYDOWN; break;
+// 						case 's': wsad[1] = ev.type==SDL_KEYDOWN; break;
+// 						case 'a': wsad[2] = ev.type==SDL_KEYDOWN; break;
+// 						case 'd': wsad[3] = ev.type==SDL_KEYDOWN; break;
+// 						case 'q': goto done;
+// 						case 'v': angle+=5; break;
+// 						case ' ': /* jump */
+// 							if(ground) { player.velocity.z += 0.5; falling = 1; }
+// 							break;
+// 						case SDLK_LCTRL: /* duck */
+// 						case SDLK_RCTRL: ducking = ev.type==SDL_KEYDOWN; falling=1; break;
+// 						default: break;
+// 					}
+// 					break;
+// 				case SDL_QUIT: goto done;
+// 			}
+
+// 		/* mouse aiming */
+// 		int x,y;
+// 		SDL_GetRelativeMouseState(&x,&y);
+// 		player.angle += x * 0.03f;
+// 		yaw          = clamp(yaw + y*0.05f, -5, 5);
+// 		player.yaw   = yaw - player.velocity.z*0.5f;
+// 		MovePlayer(0,0);
+
+// 		float move_vec[2] = {0.f, 0.f};
+// 		if(wsad[0]) { move_vec[0] += player.anglecos*0.2f; move_vec[1] += player.anglesin*0.2f; }
+// 		if(wsad[1]) { move_vec[0] -= player.anglecos*0.2f; move_vec[1] -= player.anglesin*0.2f; }
+// 		if(wsad[2]) { move_vec[0] += player.anglesin*0.2f; move_vec[1] -= player.anglecos*0.2f; }
+// 		if(wsad[3]) { move_vec[0] -= player.anglesin*0.2f; move_vec[1] += player.anglecos*0.2f; }
+// 		int pushing = wsad[0] || wsad[1] || wsad[2] || wsad[3];
+// 		float acceleration = pushing ? 0.4 : 0.2;
+
+// 		player.velocity.x = player.velocity.x * (1-acceleration) + move_vec[0] * acceleration;
+// 		player.velocity.y = player.velocity.y * (1-acceleration) + move_vec[1] * acceleration;
+
+// 		if(pushing) moving = 1;
+
+// 		//SDL_Delay(10);
+// 	}
+// done:
+// 	UnloadData();
+// 	SDL_Quit();
+// 	return 0;
+// }
