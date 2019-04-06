@@ -5,14 +5,16 @@
 #include "libft.h"
 #include "doom_nukem.h"
 //http://www.flipcode.com/archives/Building_a_3D_Portal_Engine-Issue_05_Coding_A_Wireframe_Cube.shtml
-
+/* Define window size */
+#define W 1280
+#define H 720
 /* Define various vision related constants */
 #define EyeHeight  6    // Camera height from floor when standing
 #define DuckHeight 2.5  // And when crouching
 #define HeadMargin 1    // How much room there is above camera before the head hits the ceiling
 #define KneeHeight 2    // How tall obstacles the player can simply walk over without jumping
-#define hfov (0.73f*WIN_H)  // Affects the horizontal field of vision
-#define vfov (.2f*WIN_H)    // Affects the vertical field of vision
+#define hfov (0.73f*H)  // Affects the horizontal field of vision
+#define vfov (.2f*H)    // Affects the vertical field of vision
 
 /* Sectors: Floor and ceiling height; list of edge vertices and neighbors */
 static struct sector
@@ -98,19 +100,20 @@ static void UnloadData()
 	NumSectors = 0;
 }
 
+static Uint32	 *surface = NULL;
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
-static void vline(int x, int y1,int y2, int top,int middle,int bottom, t_game *game)
+static void vline(int x, int y1,int y2, int top,int middle,int bottom)
 {
-	int *pix = (int*) game->sdl.surface;
-	y1 = clamp(y1, 0, WIN_H-1);
-	y2 = clamp(y2, 0, WIN_H-1);
+	int *pix = (int*) surface;
+	y1 = clamp(y1, 0, H-1);
+	y2 = clamp(y2, 0, H-1);
 	if(y2 == y1)
-		pix[y1*WIN_W+x] = middle;
+		pix[y1*W+x] = middle;
 	else if(y2 > y1)
 	{
-		pix[y1*WIN_W+x] = top;
-		for(int y=y1+1; y<y2; ++y) pix[y*WIN_W+x] = middle;
-		pix[y2*WIN_W+x] = bottom;
+		pix[y1*W+x] = top;
+		for(int y=y1+1; y<y2; ++y) pix[y*W+x] = middle;
+		pix[y2*W+x] = bottom;
 	}
 }
 
@@ -143,16 +146,16 @@ static void MovePlayer(float dx, float dy)
 	player.anglecos = cosf(player.angle);
 }
 
-static void DrawScreen(t_game *game)
+static void DrawScreen()
 {
 	enum { MaxQueue = 32 };  // maximum number of pending portal renders
 	struct item { int sectorno,sx1,sx2; } queue[MaxQueue], *head=queue, *tail=queue;
-	int ytop[WIN_W]={0}, ybottom[WIN_W], renderedsectors[NumSectors];
-	for(unsigned x=0; x<WIN_W; ++x) ybottom[x] = WIN_H-1;
+	int ytop[W]={0}, ybottom[W], renderedsectors[NumSectors];
+	for(unsigned x=0; x<W; ++x) ybottom[x] = H-1;
 	for(unsigned n=0; n<NumSectors; ++n) renderedsectors[n] = 0;
 
 	/* Begin whole-screen rendering from where the player is. */
-	*head = (struct item) { player.sector, 0, WIN_W-1 };
+	*head = (struct item) { player.sector, 0, W-1 };
 	if(++head == queue+MaxQueue) head = queue;
 	int timer = 0;
 	do {
@@ -186,8 +189,8 @@ static void DrawScreen(t_game *game)
 			if(tz2 < nearz) { if(i1.y > 0) { tx2 = i1.x; tz2 = i1.y; } else { tx2 = i2.x; tz2 = i2.y; } }
 		}
 		/* Do perspective transformation */
-		float xscale1 = hfov / tz1, yscale1 = vfov / tz1;    int x1 = WIN_W/2 - (int)(tx1 * xscale1);
-		float xscale2 = hfov / tz2, yscale2 = vfov / tz2;    int x2 = WIN_W/2 - (int)(tx2 * xscale2);
+		float xscale1 = hfov / tz1, yscale1 = vfov / tz1;    int x1 = W/2 - (int)(tx1 * xscale1);
+		float xscale2 = hfov / tz2, yscale2 = vfov / tz2;    int x2 = W/2 - (int)(tx2 * xscale2);
 		if(x1 >= x2 || x2 < now.sx1 || x1 > now.sx2) continue; // Only render if it's visible
 		/* Acquire the floor and ceiling heights, relative to where the player's view is */
 		float yceil  = sect->ceil  - player.where.z;
@@ -202,11 +205,11 @@ static void DrawScreen(t_game *game)
 		}
 		/* Project our ceiling & floor heights into screen coordinates (Y coordinate) */
 		#define Yaw(y,z) (y + z*player.yaw)
-		int y1a  = WIN_H/2 - (int)(Yaw(yceil, tz1) * yscale1),  y1b = WIN_H/2 - (int)(Yaw(yfloor, tz1) * yscale1);
-		int y2a  = WIN_H/2 - (int)(Yaw(yceil, tz2) * yscale2),  y2b = WIN_H/2 - (int)(Yaw(yfloor, tz2) * yscale2);
+		int y1a  = H/2 - (int)(Yaw(yceil, tz1) * yscale1),  y1b = H/2 - (int)(Yaw(yfloor, tz1) * yscale1);
+		int y2a  = H/2 - (int)(Yaw(yceil, tz2) * yscale2),  y2b = H/2 - (int)(Yaw(yfloor, tz2) * yscale2);
 		/* The same for the neighboring sector */
-		int ny1a = WIN_H/2 - (int)(Yaw(nyceil, tz1) * yscale1), ny1b = WIN_H/2 - (int)(Yaw(nyfloor, tz1) * yscale1);
-		int ny2a = WIN_H/2 - (int)(Yaw(nyceil, tz2) * yscale2), ny2b = WIN_H/2 - (int)(Yaw(nyfloor, tz2) * yscale2);
+		int ny1a = H/2 - (int)(Yaw(nyceil, tz1) * yscale1), ny1b = H/2 - (int)(Yaw(nyfloor, tz1) * yscale1);
+		int ny2a = H/2 - (int)(Yaw(nyceil, tz2) * yscale2), ny2b = H/2 - (int)(Yaw(nyfloor, tz2) * yscale2);
 
 		/* Render the wall. */
 		int beginx = max(x1, now.sx1), endx = min(x2, now.sx2);
@@ -219,9 +222,9 @@ static void DrawScreen(t_game *game)
 			int yb = (x - x1) * (y2b-y1b) / (x2-x1) + y1b, cyb = clamp(yb, ytop[x],ybottom[x]); // bottom
 
 			/* Render ceiling: everything above this sector's ceiling height. */
-			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111, game);
+			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111);
 			/* Render floor: everything below this sector's floor height. */
-			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF, game);
+			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF);
 
 			/* Is there another sector behind this edge? */
 			if(neighbor >= 0)
@@ -231,20 +234,20 @@ static void DrawScreen(t_game *game)
 				int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
 				/* If our ceiling is higher than their ceiling, render upper wall */
 				unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
-				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
-				ytop[x] = clamp(max(cya, cnya), ytop[x], WIN_H-1);   // Shrink the remaining window below these ceilings
+				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0); // Between our and their ceiling
+				ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
 				/* If our floor is lower than their floor, render bottom wall */
-			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
+			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
 				ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
 			}
 			else
 			{
 				/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
 				unsigned r = 0x010101 * (255-z);
-				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
+				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
 			}
 			unsigned r = 0x010101 * (255-z);
-			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
+			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
 		}
 		/* Schedule the neighboring sector for rendering within the window formed by this wall. */
 		if(neighbor >= 0 && endx >= beginx && (head+MaxQueue+1-tail)%MaxQueue)
@@ -256,10 +259,12 @@ static void DrawScreen(t_game *game)
 	++renderedsectors[now.sectorno];
 	 } while (head != tail); // render any other queued sectors
 }
-
+SDL_Window *window;
+SDL_Renderer *renderer;
+SDL_Texture *texture;
 float angle, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
 
-void ft_render (unsigned short* buf, float xa, float ya, float za, t_game *game)
+void ft_render (unsigned short* buf, float xa, float ya, float za)
 { 
 	float mat[4][4];            // Determine rotation matrix
 	float xdeg=xa*3.1416f/180, ydeg=ya*3.1416f/180, zdeg=za*3.1416f/180;
@@ -277,14 +282,14 @@ void ft_render (unsigned short* buf, float xa, float ya, float za, t_game *game)
 	}
 	for (int i = 0; i<4; i++)         // Actual drawing
 	{
-		SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		 SDL_RenderDrawLine(renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
+		 SDL_RenderDrawLine(renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
+		 SDL_RenderDrawLine(renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
 	}
 }
 
-void	ft_plane (t_p3d *c1, t_p3d *c2, t_p3d *c3)
+void	ft_plane (t_point3d *c1, t_point3d *c2, t_point3d *c3)
 {
 	double A = 0, B = 0, C = 0, D;
 	double rx1=c2->x-c1->x;
@@ -303,93 +308,9 @@ void	ft_plane (t_p3d *c1, t_p3d *c2, t_p3d *c3)
 	printf("DOT:%f D:%f, A:%f, B:%f, C:%f\n", dot, D, A, B, C);
 }
 
-// void		ft_update()
-// {
-
-// }
-void ft_init_window()
-{
-
-}
 int main()
 {
-	t_game game;
-	//ft_plane(&(t_p3d){0,0,0}, &(t_p3d){1,1,1}, &(t_p3d){1,1,0});
-	int x_start[WIN_H], x_end [WIN_H];
-	// Determine first and last line that the polygon covers
-	int y_min = WIN_H+1;
-	int y_max = -1;
-	game.sdl.surface = malloc(sizeof(Uint32) * WIN_W * WIN_H);
-	SDL_CreateWindowAndRenderer(WIN_W, WIN_H, 0, &(game.sdl.window), &(game.sdl.renderer));
-	SDL_ShowCursor(SDL_DISABLE);
-	game.sdl.texture = SDL_CreateTexture(game.sdl.renderer,
-							   SDL_PIXELFORMAT_ARGB8888,
-							   SDL_TEXTUREACCESS_STREAMING,
-							   WIN_W, WIN_H);
-	while(TRUE)
-	{
-		bzero(game.sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
-		//ft_render(&buf, angle, 90-angle, 0);
-		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
-		SDL_UpdateTexture(game.sdl.texture, NULL, game.sdl.surface, WIN_W * sizeof (Uint32));
-		SDL_SetRenderDrawColor(game.sdl.renderer, 0, 0, 0, 255);
-		SDL_RenderClear(game.sdl.renderer);
-		SDL_RenderCopy(game.sdl.renderer, game.sdl.texture, NULL, NULL);
-		SDL_RenderPresent(game.sdl.renderer);
-		/* Vertical collision detection */
-		SDL_Event ev;
-		while(SDL_PollEvent(&ev))
-			switch(ev.type)
-			{
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					switch(ev.key.keysym.sym)
-					{
-						case SDLK_LCTRL:
-						case SDLK_RCTRL:
-						default: break;
-					}
-					break;
-				case SDL_QUIT: goto done;
-			}
-		//SDL_Delay(10);
-	}
-done:
-	UnloadData();
-	SDL_Quit();
-	return 0;
-	
-    //  for (int i=0; i<polygon.vertices(); i++)
-    //  {   if (polygon.vertex(i).y < ymin) ymin = polygon.vertex(i).y;
-    //      if (polygon.vertex(i).y > ymax) ymax = polygon.vertex(i).y;
-    //  }
-    //  if (y_min == y_max) return;
-    //  // Initialize arrays for this range
-    //  for (i=y_min; i<y_max; i++)
-    //  {   x_start[i]=WIN_W+1;
-    //      x_end[i]=-1;
-    //  }
-    //  // Trace edges
-    //  for (i=0; i<polygon.vertices(); i++)
-    //  {   // Determine edge coordinates
-    //      float x1 = polygon.vertex(i).x;
-    //      float y1 = polygon.vertex(i).y;
-    //      float x2 = polygon.vertex((i+1) % polygon.vertices()).x;
-    //      float y2 = polygon.vertex((i+1) % polygon.vertices()).y;
-    //      // We want to draw from top to bottom
-    //      if (y2<y1)
-    //      {  swap (y1, y2);
-    //         swap (x1, x2);
-    //      }
-    //      // Determine slope of edge
-    //      float deltax = (x2-x1)/(y2-y1);
-    //      for (int p=y1; p < y2; p++)
-    //      {   int xpos = (int)x1;
-    //          if (xpos < x_start[p]) x_start[p]=xpos;
-    //          if (xpos > x_end[p]) x_end[p]=xpos;
-    //          // Advance one screen line
-    //          x1 += deltax;
-    //      } 
+	ft_plane(&(t_point3d){0,0,0}, &(t_point3d){1,1,1}, &(t_point3d){1,1,0});
 }
    
 
