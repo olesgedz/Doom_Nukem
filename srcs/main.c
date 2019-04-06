@@ -419,7 +419,7 @@ int main()
 // 		  }
 // 		  unsigned short buf = 0;
 // 	LoadData();
-// 	surface = malloc(sizeof(Uint32) * W * H);
+// 	surface = malloc(sizeof(Uint32) * W * H); //dsad
 // 	SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
 // 	SDL_ShowCursor(SDL_DISABLE);
 // 	texture = SDL_CreateTexture(renderer,
