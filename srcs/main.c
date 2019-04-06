@@ -4,6 +4,7 @@
 #include "SDL2/SDL.h"
 #include "libft.h"
 #include "doom_nukem.h"
+
 //http://www.flipcode.com/archives/Building_a_3D_Portal_Engine-Issue_05_Coding_A_Wireframe_Cube.shtml
 
 /* Define various vision related constants */
@@ -303,13 +304,60 @@ void	ft_plane (t_p3d *c1, t_p3d *c2, t_p3d *c3)
 	printf("DOT:%f D:%f, A:%f, B:%f, C:%f\n", dot, D, A, B, C);
 }
 
-// void		ft_update()
-// {
-
-// }
-void ft_init_window()
+void ft_exit()
 {
+	UnloadData();
+	SDL_Quit();
+	exit(-1);
+}
 
+void	ft_input()
+{
+	SDL_Event ev;
+	while(SDL_PollEvent(&ev))
+		switch(ev.type)
+		{
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				switch(ev.key.keysym.sym)
+				{
+					case SDLK_LCTRL:
+					case SDLK_RCTRL:
+					case SDLK_ESCAPE: ft_exit(); break;
+					default: break;
+				}
+				break;
+			case SDL_QUIT: ft_exit();
+		}
+}
+
+void		ft_update(t_game *game)
+{
+	while(TRUE)
+	{
+		bzero(game->sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
+		//ft_render(&buf, angle, 90-angle, 0);
+		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, game);
+		SDL_UpdateTexture(game->sdl.texture, NULL, game->sdl.surface, WIN_W * sizeof (Uint32));
+		SDL_SetRenderDrawColor(game->sdl.renderer, 0, 0, 0, 255);
+		SDL_RenderClear(game->sdl.renderer);
+		SDL_RenderCopy(game->sdl.renderer, game->sdl.texture, NULL, NULL);
+		SDL_RenderPresent(game->sdl.renderer);
+		ft_input();
+		SDL_Delay(10);
+	}
+}
+
+
+void ft_init_window(t_game *game)
+{
+	game->sdl.surface = malloc(sizeof(Uint32) * WIN_W * WIN_H);
+	SDL_CreateWindowAndRenderer(WIN_W, WIN_H, 0, &(game->sdl.window), &(game->sdl.renderer));
+	SDL_ShowCursor(SDL_DISABLE);
+	game->sdl.texture = SDL_CreateTexture(game->sdl.renderer,
+							   SDL_PIXELFORMAT_ARGB8888,
+							   SDL_TEXTUREACCESS_STREAMING,
+							   WIN_W, WIN_H);
 }
 int main()
 {
@@ -319,77 +367,47 @@ int main()
 	// Determine first and last line that the polygon covers
 	int y_min = WIN_H+1;
 	int y_max = -1;
-	game.sdl.surface = malloc(sizeof(Uint32) * WIN_W * WIN_H);
-	SDL_CreateWindowAndRenderer(WIN_W, WIN_H, 0, &(game.sdl.window), &(game.sdl.renderer));
-	SDL_ShowCursor(SDL_DISABLE);
-	game.sdl.texture = SDL_CreateTexture(game.sdl.renderer,
-							   SDL_PIXELFORMAT_ARGB8888,
-							   SDL_TEXTUREACCESS_STREAMING,
-							   WIN_W, WIN_H);
-	while(TRUE)
-	{
-		bzero(game.sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
-		//ft_render(&buf, angle, 90-angle, 0);
-		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
-		SDL_UpdateTexture(game.sdl.texture, NULL, game.sdl.surface, WIN_W * sizeof (Uint32));
-		SDL_SetRenderDrawColor(game.sdl.renderer, 0, 0, 0, 255);
-		SDL_RenderClear(game.sdl.renderer);
-		SDL_RenderCopy(game.sdl.renderer, game.sdl.texture, NULL, NULL);
-		SDL_RenderPresent(game.sdl.renderer);
-		/* Vertical collision detection */
-		SDL_Event ev;
-		while(SDL_PollEvent(&ev))
-			switch(ev.type)
-			{
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					switch(ev.key.keysym.sym)
-					{
-						case SDLK_LCTRL:
-						case SDLK_RCTRL:
-						default: break;
-					}
-					break;
-				case SDL_QUIT: goto done;
-			}
-		//SDL_Delay(10);
-	}
-done:
-	UnloadData();
-	SDL_Quit();
+	// for (int i=0; i<polygon.vertices(); i++)
+	// {
+	// 	if (polygon.vertex(i).y < ymin) ymin = polygon.vertex(i).y;
+	// 	if (polygon.vertex(i).y > ymax) ymax = polygon.vertex(i).y;
+	// }
+	// if (y_min == y_max) return;
+	// // Initialize arrays for this range
+	// for (i=y_min; i<y_max; i++)
+	// {
+	// 	x_start[i]=WIN_W+1;
+	// 	x_end[i]=-1;
+	// }
+	// // Trace edges
+	//  for (i=0; i<polygon.vertices(); i++)
+	//  {
+	// 	 // Determine edge coordinates
+	// 	 float x1 = polygon.vertex(i).x;
+	// 	 float y1 = polygon.vertex(i).y;
+	// 	 float x2 = polygon.vertex((i+1) % polygon.vertices()).x;
+	// 	 float y2 = polygon.vertex((i+1) % polygon.vertices()).y;
+	// 	 // We want to draw from top to bottom
+	// 	 if (y2<y1)
+	// 	 {
+	// 		swap (y1, y2);
+	// 		swap (x1, x2);
+	// 	 }
+	// 	 // Determine slope of edge
+	// 	 float deltax = (x2-x1)/(y2-y1);
+	// 	 for (int p=y1; p < y2; p++)
+	// 	 {
+	// 		 int xpos = (int)x1;
+	// 		 if (xpos < x_start[p]) x_start[p]=xpos;
+	// 		 if (xpos > x_end[p]) x_end[p]=xpos;
+	// 		 // Advance one screen line
+	// 		 x1 += deltax;
+	// 	 }
+	//  } 
+	ft_init_window(&game);
+	ft_update(&game);
+
 	return 0;
-	
-    //  for (int i=0; i<polygon.vertices(); i++)
-    //  {   if (polygon.vertex(i).y < ymin) ymin = polygon.vertex(i).y;
-    //      if (polygon.vertex(i).y > ymax) ymax = polygon.vertex(i).y;
-    //  }
-    //  if (y_min == y_max) return;
-    //  // Initialize arrays for this range
-    //  for (i=y_min; i<y_max; i++)
-    //  {   x_start[i]=WIN_W+1;
-    //      x_end[i]=-1;
-    //  }
-    //  // Trace edges
-    //  for (i=0; i<polygon.vertices(); i++)
-    //  {   // Determine edge coordinates
-    //      float x1 = polygon.vertex(i).x;
-    //      float y1 = polygon.vertex(i).y;
-    //      float x2 = polygon.vertex((i+1) % polygon.vertices()).x;
-    //      float y2 = polygon.vertex((i+1) % polygon.vertices()).y;
-    //      // We want to draw from top to bottom
-    //      if (y2<y1)
-    //      {  swap (y1, y2);
-    //         swap (x1, x2);
-    //      }
-    //      // Determine slope of edge
-    //      float deltax = (x2-x1)/(y2-y1);
-    //      for (int p=y1; p < y2; p++)
-    //      {   int xpos = (int)x1;
-    //          if (xpos < x_start[p]) x_start[p]=xpos;
-    //          if (xpos > x_end[p]) x_end[p]=xpos;
-    //          // Advance one screen line
-    //          x1 += deltax;
-    //      } 
 }
    
 
