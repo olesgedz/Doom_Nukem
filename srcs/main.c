@@ -260,7 +260,7 @@ static void DrawScreen(t_game *game)
 
 float angle, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
 
-void ft_render (unsigned short* buf, float xa, float ya, float za, t_game *game)
+void ft_render (unsigned int* buf, float xa, float ya, float za, t_game *game)
 { 
 	float mat[4][4];            // Determine rotation matrix
 	float xdeg=xa*3.1416f/180, ydeg=ya*3.1416f/180, zdeg=za*3.1416f/180;
@@ -282,6 +282,7 @@ void ft_render (unsigned short* buf, float xa, float ya, float za, t_game *game)
 		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
 		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
 		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
+		 printf("asdasdas\n");
 	}
 }
 
@@ -336,7 +337,7 @@ void		ft_update(t_game *game)
 	while(TRUE)
 	{
 		bzero(game->sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
-		//ft_render(&buf, angle, 90-angle, 0);
+		ft_render(game->sdl.surface, angle, 90-angle, 0, game);
 		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, game);
 		SDL_UpdateTexture(game->sdl.texture, NULL, game->sdl.surface, WIN_W * sizeof (Uint32));
 		SDL_SetRenderDrawColor(game->sdl.renderer, 0, 0, 0, 255);
