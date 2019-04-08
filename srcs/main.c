@@ -4,6 +4,7 @@
 #include "SDL2/SDL.h"
 #include "libft.h"
 #include "doom_nukem.h"
+#include "libsdl.h"
 
 //http://www.flipcode.com/archives/Building_a_3D_Portal_Engine-Issue_05_Coding_A_Wireframe_Cube.shtml
 
@@ -258,10 +259,11 @@ static void DrawScreen(t_game *game)
 	 } while (head != tail); // render any other queued sectors
 }
 
-float angle, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
+float angleX, angleY, angleZ, x[8], y[8], z[8], rx[8], ry[8], rz[8], scrx[8], scry[8];
 
 void ft_render (unsigned int* buf, float xa, float ya, float za, t_game *game)
 { 
+	
 	float mat[4][4];            // Determine rotation matrix
 	float xdeg=xa*3.1416f/180, ydeg=ya*3.1416f/180, zdeg=za*3.1416f/180;
 	float sx=(float)sin(xdeg), sy=(float)sin(ydeg), sz=(float)sin(zdeg);
@@ -279,10 +281,12 @@ void ft_render (unsigned int* buf, float xa, float ya, float za, t_game *game)
 	for (int i = 0; i<4; i++)         // Actual drawing
 	{
 		SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
-		 SDL_RenderDrawLine(game->sdl.renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
-		 printf("asdasdas\n");
+		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
+		 ft_plot_line(game->sdl.surface, (t_point){scrx[i],scry[i]},( t_point){scrx[i + 4],scry[i + 4]}, 0xFF0000, WIN_W);
+		 ft_plot_line(game->sdl.surface, (t_point){scrx[i],scry[i]},( t_point){scrx[(i + 1) % 4],scry[(i + 1) % 4]}, 0xFF0000, WIN_W);
+		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
+		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
+		 ft_plot_line(game->sdl.surface, (t_point){scrx[i + 4],scry[i + 4]},( t_point){scrx[((i + 1) % 4) + 4],scry[((i + 1) % 4) + 4]}, 0xFF0000, WIN_W);
 	}
 }
 
@@ -325,6 +329,9 @@ void	ft_input()
 					case SDLK_LCTRL:
 					case SDLK_RCTRL:
 					case SDLK_ESCAPE: ft_exit(); break;
+					case SDLK_z: angleX++;
+					case SDLK_x: angleY++;
+					case SDLK_c: angleZ++;
 					default: break;
 				}
 				break;
@@ -332,16 +339,25 @@ void	ft_input()
 		}
 }
 
+int ft_draw_sector()
+{
+	return (0);
+}
+
+
 void		ft_update(t_game *game)
 {
 	while(TRUE)
 	{
 		bzero(game->sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
-		ft_render(game->sdl.surface, angle, 90-angle, 0, game);
+		SDL_RenderClear(game->sdl.renderer);
+		//SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
+		ft_render(game->sdl.surface, angleX, angleY, angleZ, game);
+		//SDL_RenderDrawLine(game->sdl.renderer, 500, 20, 500, 300);
 		vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, game);
 		SDL_UpdateTexture(game->sdl.texture, NULL, game->sdl.surface, WIN_W * sizeof (Uint32));
-		SDL_SetRenderDrawColor(game->sdl.renderer, 0, 0, 0, 255);
-		SDL_RenderClear(game->sdl.renderer);
+		//SDL_SetRenderDrawColor(game->sdl.renderer, 0, 0, 0, 255);
+		//SDL_RenderClear(game->sdl.renderer);
 		SDL_RenderCopy(game->sdl.renderer, game->sdl.texture, NULL, NULL);
 		SDL_RenderPresent(game->sdl.renderer);
 		ft_input();
@@ -360,6 +376,24 @@ void ft_init_window(t_game *game)
 							   SDL_TEXTUREACCESS_STREAMING,
 							   WIN_W, WIN_H);
 }
+
+
+    //  Frustum fr;
+    //  function renderSector (sector)
+    //  {   for (each polygon in current sector)
+    //      {   if (!facing (polygon)) continue;
+    //          if (clip (polygon, fr) == NULL) continue;
+    //          if (polygon != PORTAL) markVisible;
+    //          if (polygon == PORTAL)
+    //          {   Push fr;
+    //              fr = adjustFrustum (fr, polygon);
+    //              renderSector (polygon.sector)
+    //              Pop fr;  
+    //          }
+    //      }
+    //  }
+
+
 int main()
 {
 	t_game game;
@@ -368,6 +402,12 @@ int main()
 	// Determine first and last line that the polygon covers
 	int y_min = WIN_H+1;
 	int y_max = -1;
+	for (int i=0; i<8; i++)     // Define the cube
+	{ 
+		x[i]=(float)(50-100*(((i+1)/2)%2));
+		y[i]=(float)(50-100*((i/2)%2));
+		z[i]=(float)(50-100*((i/4)%2));
+	}
 	// for (int i=0; i<polygon.vertices(); i++)
 	// {
 	// 	if (polygon.vertex(i).y < ymin) ymin = polygon.vertex(i).y;

@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/04/05 18:53:29 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/04/08 22:46:27 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,13 +14,17 @@ NAME = doom-nukem
 
 FLAGS = -g -O3
 CC = gcc
-LIBRARIES = -lft -L$(LIBFT_DIRECTORY)
-INCLUDES = -I$(HEADERS_DIRECTORY) -I$(LIBFT_HEADERS) -I$(SDL_HEADERS)
+LIBRARIES = -lft -L$(LIBFT_DIRECTORY)  -lsdl -L$(LIBSDL_DIRECTORY)
+INCLUDES = -I$(HEADERS_DIRECTORY) -I$(LIBFT_HEADERS) -I$(SDL_HEADERS) -I$(LIBSDL_HEADERS)
 
 LIBFT = $(LIBFT_DIRECTORY)libft.a
 LIBFT_DIRECTORY = ./libft/
 LIBFT_HEADERS = $(LIBFT_DIRECTORY)includes/
 SDL_HEADERS = include/
+
+LIBSDL = $(LIBSDL_DIRECTORY)libsdl.a
+LIBSDL_DIRECTORY = ./libsdl/
+LIBSDL_HEADERS = $(LIBSDL_DIRECTORY)includes/
 
 HEADERS_DIRECTORY = ./includes/
 HEADERS_LIST = 
@@ -74,7 +78,7 @@ CURRENT_FILES = $(shell find $(DIRECTORY)/objects/ -type f 2> /dev/null | wc -l 
 
 all: $(NAME)
 
-$(NAME): $(LIBFT) $(OBJS_DIRECTORY) $(OBJS)
+$(NAME): $(LIBFT) $(LIBSDL) $(OBJS_DIRECTORY) $(OBJS)
 	@$(CC) $(FLAGS) $(LIBRARIES) $(INCLUDES) $(OBJS) $(SDL_CFLAGS) $(SDL_LDFLAGS) -o $(NAME)
 	@echo "$(CLEAR_LINE)[`expr $(CURRENT_FILES) '*' 100 / $(TOTAL_FILES)`%] $(COL_BLUE)[$(NAME)] $(COL_GREEN)Finished compilation. Output file : $(COL_VIOLET)$(PWD)/$(NAME)$(COL_END)"
 
@@ -103,8 +107,13 @@ $(LIBFT):
 	@echo "$(NAME): $(GREEN)Creating $(LIBFT)...$(RESET)"
 	@$(MAKE) -sC $(LIBFT_DIRECTORY)
 
+$(LIBSDL):
+	@echo "$(NAME): $(GREEN)Creating $(LIBSDL)...$(RESET)"
+	@$(MAKE) -sC $(LIBSDL_DIRECTORY)
+
 clean:
 	@$(MAKE) -sC $(LIBFT_DIRECTORY) clean
+	@$(MAKE) -sC $(LIBSDL_DIRECTORY) clean
 	@rm -rf $(OBJS_DIRECTORY)
 	@echo "$(NAME): $(RED)$(OBJECTS_DIRECTORY) was deleted$(RESET)"
 	@echo "$(NAME): $(RED)object files were deleted$(RESET)"
@@ -119,6 +128,8 @@ fclean: clean
 	@echo "$(NAME): $(RED)$(LIBFT) was deleted$(RESET)"
 	@rm -f $(NAME)
 	@echo "$(NAME): $(RED)$(NAME) was deleted$(RESET)"
+	@$(MAKE) -sC $(LIBFT_DIRECTORY) fclean
+	@$(MAKE) -sC $(LIBSDL_DIRECTORY) fclean
 	#@rm -f $(DIRECTORY)/bin/sdl2-config
 	#@rm -f $(DIRECTORY)/lib/libSDL2.la
 	#@rm -f $(DIRECTORY)/lib/libSDL2main.la
