@@ -20,7 +20,7 @@ typedef	struct 	s_p3d
 
 struct s_vertex
 {
-	t_coord *position;
+	t_p3d position;
 	float U, V;
 };
 
@@ -33,8 +33,8 @@ typedef struct s_coord
 
 typedef struct s_polygon
 {
-	t_vertex **vertises;
-	int vertices;
+	t_vertex **vertices;
+	int nvertices;
 	//Texture
 	t_sector *sector;
 	//Plane
