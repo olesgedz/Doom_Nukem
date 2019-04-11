@@ -1,3 +1,5 @@
+# Vertexes (Y coordinate, followed by list of X coordinates)
+
 vertex	0	0 6 28
 vertex	2	1 17.5
 vertex	5	4 6 18 21
@@ -11,6 +13,8 @@ vertex	13	4 6 18 21
 vertex	16	1 17.5
 vertex	18	0 6 28
 
+# Sectors (height of the floor, height of the ceiling, then number of peaks in the direction of clockwise)
+# After the list of vertices, comes the list of sector numbers on the "opposite" side of this wall; "x" = none
 sector	0 20	 3 14 29 49             -1 1 11 22 
 sector	0 20	 17 15 14 3 9           -1 12 11 0 21 
 sector	0 20	 41 42 43 44 50 49 40   -1 20 -1 3 -1 -1 22 
