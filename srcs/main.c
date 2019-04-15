@@ -86,8 +86,9 @@ static void LoadData()
 				player = (struct player) { {v.x, v.y, 0}, {0,0,0}, angle,0,0,0, n }; // TODO: Range checking
 				player.where.z = sectors[player.sector].floor + EyeHeight;
 		}
-	fclose(fp);
-	free(vert);
+	}
+    fclose(fp);
+    free(vert);
 }
 static void UnloadData()
 {
