@@ -3,6 +3,7 @@
 
 #define WIN_W 1280
 #define WIN_H 720
+#define WIN2_W 1280
 
 #include "SDL2/SDL.h"
 
