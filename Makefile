@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/04/16 18:52:35 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/04/17 21:17:39 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -46,7 +46,7 @@ LIB_LIST =	libSDL2.a\
 			libSDL2main.a
 
 SRCS_DIRECTORY = ./srcs/
-SRCS_LIST = portrend.c
+SRCS_LIST = main.c
 OBJS_DIRECTORY = objects/
 OBJS_LIST = $(patsubst %.c, %.o, $(SRCS_LIST))
 OBJS = $(addprefix $(OBJS_DIRECTORY), $(OBJS_LIST))

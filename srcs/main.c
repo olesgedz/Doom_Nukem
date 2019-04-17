@@ -470,6 +470,24 @@ void ft_init_window(t_game *game)
     //  }
 
 
+void ft_print_sectors()
+{
+	int j = 0;
+	while (j < NumSectors)
+	{
+		printf("floor: %f\n", sectors[j].floor);
+		printf("celing: %f\n", sectors[j].ceil);
+		printf("nPoints: %u\n", sectors[j].npoints);
+		int i = 0;
+		while (i < sectors[j].npoints)
+		{
+			printf("x:%f ", sectors[j].vertex[i].x);
+			printf("y:%f\n", sectors[j].vertex[i].y);
+			i++;
+		}
+		j++;
+	}
+}
 
 
 
@@ -479,10 +497,10 @@ int			main()
 	//ft_plane(&(t_p3d){0,0,0}, &(t_p3d){1,1,1}, &(t_p3d){1,1,0});
 	// Determine first and last line that the polygon covers
 	LoadData();
+	ft_print_sectors();
+	//ft_init_window(&game);
+	//ft_update(&game);
 	
-	ft_init_window(&game);
-	ft_update(&game);
-
 	return 0;
 }
    
