@@ -424,7 +424,6 @@ void		ft_update(t_game *game)
 {
 	while(TRUE)
 	{
-		bzero(game->sdl.surface, sizeof(Uint32) * WIN_W * WIN_H);
 		//SDL_RenderClear(game->sdl.renderer);
 		ft_draw_polygon(game);
 		//SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
