@@ -267,7 +267,6 @@ int main()
 {
 	t_game game;
 	game.sdl = *(t_sdl*)malloc(sizeof(t_sdl));
-	game.sdl.surface = ft_surface_create(W, H);
 	LoadData();
 	ft_init_window(&game.sdl, W, H);
 	int wsad[4]={0,0,0,0}, ground=0, falling=1, moving=0, ducking=0;
