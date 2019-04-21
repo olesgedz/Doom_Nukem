@@ -6,6 +6,7 @@
 #define WIN2_W 1280
 
 #include "SDL2/SDL.h"
+#include "libft.h"
 #include "libsdl.h"
 
 typedef struct s_vertex t_vertex;
