@@ -282,11 +282,11 @@ void ft_render (unsigned int* buf, float xa, float ya, float za, t_game *game)
 	{
 		SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
 		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[i+4], scry[i+4]);
-		 ft_plot_line(game->sdl.surface, (t_point){scrx[i],scry[i]},( t_point){scrx[i + 4],scry[i + 4]}, 0xFF0000, WIN_W);
-		 ft_plot_line(game->sdl.surface, (t_point){scrx[i],scry[i]},( t_point){scrx[(i + 1) % 4],scry[(i + 1) % 4]}, 0xFF0000, WIN_W);
+		 ft_plot_line(game->sdl.surface, &(t_point){scrx[i],scry[i]},&(t_point){scrx[i + 4],scry[i + 4]}, 0xFF0000);
+		 ft_plot_line(game->sdl.surface, &(t_point){scrx[i],scry[i]},&(t_point){scrx[(i + 1) % 4],scry[(i + 1) % 4]}, 0xFF0000);
 		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i], scry[i], scrx[(i+1)%4], scry[(i+1)%4]);
 		// SDL_RenderDrawLine(game->sdl.renderer, scrx[i+4], scry[i+4], scrx[((i+1)%4)+4], scry[((i+1)%4)+4]);
-		 ft_plot_line(game->sdl.surface, (t_point){scrx[i + 4],scry[i + 4]},( t_point){scrx[((i + 1) % 4) + 4],scry[((i + 1) % 4) + 4]}, 0xFF0000, WIN_W);
+		 ft_plot_line(game->sdl.surface, &(t_point){scrx[i + 4],scry[i + 4]},&(t_point){scrx[((i + 1) % 4) + 4],scry[((i + 1) % 4) + 4]}, 0xFF0000);
 	}
 }
 
@@ -316,27 +316,26 @@ void ft_exit()
 	exit(-1);
 }
 
-void	ft_input()
+int	ft_in(t_sdl *sdl, SDL_Event *ev)
 {
-	SDL_Event ev;
-	while(SDL_PollEvent(&ev))
-		switch(ev.type)
-		{
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				switch(ev.key.keysym.sym)
-				{
-					case SDLK_LCTRL:
-					case SDLK_RCTRL:
-					case SDLK_ESCAPE: ft_exit(); break;
-					case SDLK_z: angleX++;
-					case SDLK_x: angleY++;
-					case SDLK_c: angleZ++;
-					default: break;
-				}
-				break;
-			case SDL_QUIT: ft_exit();
-		}
+	switch(ev->type)
+	{
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			switch(ev->key.keysym.sym)
+			{
+				case SDLK_LCTRL:
+				case SDLK_RCTRL:
+				case SDLK_ESCAPE: ft_exit(NULL); break;
+				case SDLK_z: angleX++;
+				case SDLK_x: angleY++;
+				case SDLK_c: angleZ++;
+				default: break;
+			}
+			break;
+		case SDL_QUIT: ft_exit(NULL);
+	}
+	return (0);
 }
 
 
@@ -413,7 +412,7 @@ void		ft_draw_polygon(t_game *game)
 			 // Advance one screen line
 			// printf("%f, %f, %f,\n", x1, y1, y2);
 			 //vline(x1, y1, y2, 0, 0xFF0000, 0, game);
-			 ft_plot_line(game->sdl.surface, (t_point){x1,y1}, (t_point){x2,y2}, 0xFF0000, WIN_W);
+			 ft_plot_line(game->sdl.surface, &(t_point){x1,y1}, &(t_point){x2,y2}, 0xFF0000);
 			 x1 += deltax;
 		 }
 	 } 
@@ -422,36 +421,18 @@ void		ft_draw_polygon(t_game *game)
 
 void		ft_update(t_game *game)
 {
+	//SDL_Event ev;
 	while(TRUE)
 	{
-		//SDL_RenderClear(game->sdl.renderer);
+		ft_surface_clear(game->sdl.surface);
 		ft_draw_polygon(game);
-		//SDL_SetRenderDrawColor(game->sdl.renderer, 255, 0, 0, 255);
-		ft_render(game->sdl.surface, angleX, angleY, angleZ, game);
-		//SDL_RenderDrawLine(game->sdl.renderer, 500, 20, 500, 300);
-		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, game);
+		ft_render(game->sdl.surface->data, angleX, angleY, angleZ, game);
 		SDL_UpdateTexture(game->sdl.texture, NULL, game->sdl.surface, WIN_W * sizeof (Uint32));
-		//SDL_SetRenderDrawColor(game->sdl.renderer, 0, 0, 0, 255);
-		//SDL_RenderClear(game->sdl.renderer);
-		SDL_RenderCopy(game->sdl.renderer, game->sdl.texture, NULL, NULL);
-		SDL_RenderPresent(game->sdl.renderer);
-		ft_input();
+		ft_input(&game->sdl, ft_in);
+		ft_surface_present(&game->sdl, game->sdl.surface);
 		SDL_Delay(10);
 	}
 }
-
-
-void ft_init_window(t_game *game)
-{
-	game->sdl.surface = malloc(sizeof(Uint32) * WIN_W * WIN_H);
-	SDL_CreateWindowAndRenderer(WIN_W, WIN_H, 0, &(game->sdl.window), &(game->sdl.renderer));
-	SDL_ShowCursor(SDL_TRUE); // CURSOR
-	game->sdl.texture = SDL_CreateTexture(game->sdl.renderer,
-							   SDL_PIXELFORMAT_ARGB8888,
-							   SDL_TEXTUREACCESS_STREAMING,
-							   WIN_W, WIN_H);
-}
-
 
     //  Frustum fr;
     //  function renderSector (sector)
@@ -493,12 +474,11 @@ void ft_print_sectors()
 int			main()
 {
 	t_game game;
-	//ft_plane(&(t_p3d){0,0,0}, &(t_p3d){1,1,1}, &(t_p3d){1,1,0});
-	// Determine first and last line that the polygon covers
+	game.sdl = *(t_sdl *)malloc(sizeof(t_sdl));
+	ft_init_window(&game.sdl, WIN_W, WIN_H);
 	LoadData();
 	ft_print_sectors();
-	//ft_init_window(&game);
-	//ft_update(&game);
+	ft_update(&game);
 	
 	return 0;
 }
