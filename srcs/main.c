@@ -3,6 +3,8 @@
 #include <math.h>
 #include "SDL2/SDL.h"
 #include "libft.h"
+#include "libsdl.h"
+#include "doom_nukem.h"
 /* Define window size */
 #define W 1280
 #define H 720
@@ -98,23 +100,22 @@ static void UnloadData()
 	NumSectors = 0;
 }
 
-static Uint32	 *surface = NULL;
+//static Uint32	 *surface = NULL;
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
-static void vline(int x, int y1,int y2, int top,int middle,int bottom)
+static void vline(int x, int y1,int y2, int top,int middle,int bottom, t_game *game)
 {
-	int *pix = (int*) surface;
-	y1 = clamp(y1, 0, H-1);
-	y2 = clamp(y2, 0, H-1);
+	int *pix = (int*) game->sdl.surface->data;
+	 y1 = clamp(y1, 0, WIN_H-1);
+	 y2 = clamp(y2, 0, WIN_H-1);
 	if(y2 == y1)
-		pix[y1*W+x] = middle;
+	 	pix[y1* game->sdl.surface->width+x] = middle;
 	else if(y2 > y1)
-	{
-		pix[y1*W+x] = top;
-		for(int y=y1+1; y<y2; ++y) pix[y*W+x] = middle;
-		pix[y2*W+x] = bottom;
-	}
+	 {
+	 	pix[y1 *game->sdl.surface->width +x] = top;
+	 	for(int y=y1+1; y<y2; ++y) pix[y*game->sdl.surface->width+x] = middle;
+		pix[y2*game->sdl.surface->width+x] = bottom;
+	 }
 }
-
 /* MovePlayer(dx,dy): Moves the player by (dx,dy) in the map, and
  * also updates their anglesin/anglecos/sector properties properly.
  */
@@ -144,7 +145,7 @@ static void MovePlayer(float dx, float dy)
 	player.anglecos = cosf(player.angle);
 }
 
-static void DrawScreen()
+static void DrawScreen(t_game *game)
 {
 	enum { MaxQueue = 32 };  // maximum number of pending portal renders
 	struct item { int sectorno,sx1,sx2; } queue[MaxQueue], *head=queue, *tail=queue;
@@ -220,9 +221,9 @@ static void DrawScreen()
 			int yb = (x - x1) * (y2b-y1b) / (x2-x1) + y1b, cyb = clamp(yb, ytop[x],ybottom[x]); // bottom
 
 			/* Render ceiling: everything above this sector's ceiling height. */
-			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111);
+			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111, game);
 			/* Render floor: everything below this sector's floor height. */
-			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF);
+			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF, game);
 
 			/* Is there another sector behind this edge? */
 			if(neighbor >= 0)
@@ -232,20 +233,20 @@ static void DrawScreen()
 				int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
 				/* If our ceiling is higher than their ceiling, render upper wall */
 				unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
-				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0); // Between our and their ceiling
+				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
 				ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
 				/* If our floor is lower than their floor, render bottom wall */
-			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0); // Between their and our floor
+			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
 				ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
 			}
 			else
 			{
 				/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
 				unsigned r = 0x010101 * (255-z);
-				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
+				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
 			}
 			unsigned r = 0x010101 * (255-z);
-			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0);
+			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
 		}
 		/* Schedule the neighboring sector for rendering within the window formed by this wall. */
 		if(neighbor >= 0 && endx >= beginx && (head+MaxQueue+1-tail)%MaxQueue)
@@ -264,25 +265,19 @@ SDL_Texture *texture;
 
 int main()
 {
+	t_game game;
+	game.sdl = *(t_sdl*)malloc(sizeof(t_sdl));
+	game.sdl.surface = ft_surface_create(W, H);
 	LoadData();
-	surface = malloc(sizeof(Uint32) * W * H);
-	SDL_CreateWindowAndRenderer(W, H, 0, &window, &renderer);
-	SDL_ShowCursor(SDL_DISABLE);
-	texture = SDL_CreateTexture(renderer,
-							   SDL_PIXELFORMAT_ARGB8888,
-							   SDL_TEXTUREACCESS_STREAMING,
-							   W, H);
+	ft_init_window(&game.sdl, W, H);
 	int wsad[4]={0,0,0,0}, ground=0, falling=1, moving=0, ducking=0;
 	float yaw = 0;
 	for(;;)
 	{
-		bzero(surface, sizeof(Uint32) * W * H);
-		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF);
-		DrawScreen();
-		SDL_UpdateTexture(texture, NULL, surface, W * sizeof (Uint32));
-		SDL_RenderClear(renderer);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
-		SDL_RenderPresent(renderer);
+		ft_surface_clear(game.sdl.surface);
+		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
+		DrawScreen(&game);
+		ft_surface_present(&game.sdl, game.sdl.surface);
 		/* Vertical collision detection */
 		float eyeheight = ducking ? DuckHeight : EyeHeight;
 		ground = !falling;
