@@ -53,8 +53,8 @@ static struct player
 
 static void LoadData()
 {
-	FILE* fp = fopen("map-clear.txt", "rt");
-	if(!fp) { perror("map-clear.txt"); exit(1); }
+	FILE* fp = fopen("map.txt", "rt");
+	if(!fp) { perror("map.txt"); exit(1); }
 	char Buf[256], word[256], *ptr;
 	struct xy* vert = NULL, v;
 	int n, m, NumVertices = 0;
@@ -86,7 +86,6 @@ static void LoadData()
 				player = (struct player) { {v.x, v.y, 0}, {0,0,0}, angle,0,0,0, n }; // TODO: Range checking
 				player.where.z = sectors[player.sector].floor + EyeHeight;
 		}
-	}
     fclose(fp);
     free(vert);
 }
