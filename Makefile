@@ -6,7 +6,7 @@
 #    By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/16 12:58:07 by jblack-b          #+#    #+#              #
-#    Updated: 2019/04/17 21:17:39 by jblack-b         ###   ########.fr        #
+#    Updated: 2019/04/24 20:39:45 by jblack-b         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -121,6 +121,9 @@ clean:
 
 dd:
 	rm $(NAME)
+
+lib:
+	@$(MAKE) -sC $(LIBSDL_DIRECTORY) 
 
 fclean: clean
 	@rm -r $(LIBFT)

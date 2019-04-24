@@ -38,20 +38,6 @@ static struct player
 // Utility functions. Because C doesn't have templates,
 // we use the slightly less safe preprocessor macros to
 // implement these functions that work with multiple types.
-#define min(a,b)             (((a) < (b)) ? (a) : (b)) // min: Choose smaller of two scalars.
-#define max(a,b)             (((a) > (b)) ? (a) : (b)) // max: Choose greater of two scalars.
-#define clamp(a, mi,ma)      min(max(a,mi),ma)         // clamp: Clamp value into set range.
-#define vxs(x0,y0, x1,y1)    ((x0)*(y1) - (x1)*(y0))   // vxs: Vector cross product
-// Overlap:  Determine whether the two number ranges overlap.
-#define Overlap(a0,a1,b0,b1) (min(a0,a1) <= max(b0,b1) && min(b0,b1) <= max(a0,a1))
-// IntersectBox: Determine whether two 2D-boxes intersect.
-#define IntersectBox(x0,y0, x1,y1, x2,y2, x3,y3) (Overlap(x0,x1,x2,x3) && Overlap(y0,y1,y2,y3))
-// PointSide: Determine which side of a line the point is on. Return value: <0, =0 or >0.
-#define PointSide(px,py, x0,y0, x1,y1) vxs((x1)-(x0), (y1)-(y0), (px)-(x0), (py)-(y0))
-// Intersect: Calculate the point of intersection between two lines.
-#define Intersect(x1,y1, x2,y2, x3,y3, x4,y4) ((struct xy) { \
-	vxs(vxs(x1,y1, x2,y2), (x1)-(x2), vxs(x3,y3, x4,y4), (x3)-(x4)) / vxs((x1)-(x2), (y1)-(y2), (x3)-(x4), (y3)-(y4)), \
-	vxs(vxs(x1,y1, x2,y2), (y1)-(y2), vxs(x3,y3, x4,y4), (y3)-(y4)) / vxs((x1)-(x2), (y1)-(y2), (x3)-(x4), (y3)-(y4)) })
 
 static void LoadData()
 {
@@ -222,6 +208,7 @@ static void DrawScreen(t_game *game)
 
 			/* Render ceiling: everything above this sector's ceiling height. */
 			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111, game);
+			//ft_vline(game->sdl.surface,&(t_point){x,ytop[x]},&(t_point){x,cya-1},0x111111);
 			/* Render floor: everything below this sector's floor height. */
 			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF, game);
 
@@ -233,20 +220,24 @@ static void DrawScreen(t_game *game)
 				int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
 				/* If our ceiling is higher than their ceiling, render upper wall */
 				unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
-				vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
+				//vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
+				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r1);
 				ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
 				/* If our floor is lower than their floor, render bottom wall */
-			  	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
+			  	//vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
+				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r2);
 				ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
 			}
 			else
 			{
 				/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
 				unsigned r = 0x010101 * (255-z);
-				vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
+				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);//x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);	
+				//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
 			}
 			unsigned r = 0x010101 * (255-z);
-			vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
+			//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
+			ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
 		}
 		/* Schedule the neighboring sector for rendering within the window formed by this wall. */
 		if(neighbor >= 0 && endx >= beginx && (head+MaxQueue+1-tail)%MaxQueue)
@@ -258,12 +249,6 @@ static void DrawScreen(t_game *game)
 	++renderedsectors[now.sectorno];
 	 } while (head != tail); // render any other queued sectors
 }
-SDL_Window *window;
-SDL_Renderer *renderer;
-SDL_Texture *texture;
-
-
-
 
 void		ft__player_collision(t_game *game)
 {
