@@ -63,5 +63,11 @@ typedef  struct s_world
 typedef struct s_game
 {
 	t_sdl sdl;
+	int ground;
+	int falling;
+	int moving;
+	int ducking;
+	int *wsad;
+	float yaw;
 } t_game;
 #endif
