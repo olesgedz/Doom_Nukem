@@ -393,19 +393,32 @@ void		ft_update(t_game *game)
 {	
 	clock_t current_ticks, delta_ticks;
 	clock_t fps = 0;
-
+	//const SDL_Rect rect = Sdl_creat
+	 Uint32 *pix; 
+	
 	while (1)
 	{
+		int pitch = 0;
 		 current_ticks = clock();
-		ft_surface_clear(game->sdl.surface);
+		//ft_surface_clear(game->sdl.surface);
 
 		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
 		ft__player_collision(game);
-		DrawScreen(game);
+		//DrawScreen(game);
 		ft_input(game, ft_input_check);
 
-		//ft_plot_wline(game->sdl.surface, &(t_fpoint){500, 200}, &(t_fpoint){300, 500}, 0xFF0000);
-		ft_surface_present(&game->sdl, game->sdl.surface);
+		SDL_LockTexture(game->sdl.texture,NULL, (void **)&pix, &pitch);
+		// ft_plot_wline(game->sdl.surface, &(t_fpoint){500, 200}, &(t_fpoint){300, 500}, 0xFF0000);
+		// ft_plot_line(game->sdl.surface, &(t_point){450, 150}, &(t_point){250, 450}, 0xFF0000);
+		for (int y = 0; y < 500; y++)
+		{
+			for(int x = 0; x < 500; x++)
+				((int*)pix)[x + y * 500] = 0xFF0000;
+		}
+		SDL_UnlockTexture(game->sdl.texture);
+		SDL_RenderCopy(game->sdl.renderer, game->sdl.texture, NULL, NULL);
+		SDL_RenderPresent(game->sdl.renderer);
+		//ft_surface_present(&game->sdl, game->sdl.surface);
 		 delta_ticks = clock() - current_ticks; //the time, in ms, that took to render the scene
     if(delta_ticks > 0)
         fps = CLOCKS_PER_SEC / delta_ticks;
@@ -419,6 +432,7 @@ int main()
 	t_game game;
 	game.sdl = *(t_sdl*)malloc(sizeof(t_sdl));
 	LoadData();
+	
 	ft_init_window(&game.sdl, W, H);
 	game.wsad = ft_memalloc(sizeof(int) * 4);
 	ft_update(&game);
