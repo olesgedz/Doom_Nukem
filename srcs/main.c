@@ -5,6 +5,7 @@
 #include "libft.h"
 #include "libsdl.h"
 #include "doom_nukem.h"
+#include <time.h>
 /* Define window size */
 #define W 1280
 #define H 720
@@ -88,19 +89,12 @@ static void UnloadData()
 
 //static Uint32	 *surface = NULL;
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
-static void vline(int x, int y1,int y2, int top,int middle,int bottom, t_game *game)
+static void vline(t_surface *surface, int x, int y1,int y2, int color)
 {
-	int *pix = (int*) game->sdl.surface->data;
+	int *pix = (int*) surface->data;
 	 y1 = clamp(y1, 0, WIN_H-1);
 	 y2 = clamp(y2, 0, WIN_H-1);
-	if(y2 == y1)
-	 	pix[y1* game->sdl.surface->width+x] = middle;
-	else if(y2 > y1)
-	 {
-	 	pix[y1 *game->sdl.surface->width +x] = top;
-	 	for(int y=y1+1; y<y2; ++y) pix[y*game->sdl.surface->width+x] = middle;
-		pix[y2*game->sdl.surface->width+x] = bottom;
-	 }
+	for(int y=y1+1; y<y2; ++y) pix[y* surface->width+x] = color;
 }
 /* MovePlayer(dx,dy): Moves the player by (dx,dy) in the map, and
  * also updates their anglesin/anglecos/sector properties properly.
@@ -130,6 +124,8 @@ static void MovePlayer(float dx, float dy)
 	player.anglesin = sinf(player.angle);
 	player.anglecos = cosf(player.angle);
 }
+
+//#define ft_line 
 
 static void DrawScreen(t_game *game)
 {
@@ -207,11 +203,19 @@ static void DrawScreen(t_game *game)
 			int yb = (x - x1) * (y2b-y1b) / (x2-x1) + y1b, cyb = clamp(yb, ytop[x],ybottom[x]); // bottom
 
 			/* Render ceiling: everything above this sector's ceiling height. */
-			vline(x, ytop[x], cya-1, 0x111111 ,0x222222,0x111111, game);
-			//ft_vline(game->sdl.surface,&(t_point){x,ytop[x]},&(t_point){x,cya-1},0x111111);
+			#ifdef ft_line
+				ft_vline(game->sdl.surface,&(t_point){x,ytop[x]},&(t_point){x,cya-1},0x111111);
+			#else
+				vline(game->sdl.surface, x, ytop[x], cya-1, 0x500050);
+			#endif
+			//
 			/* Render floor: everything below this sector's floor height. */
-			vline(x, cyb+1, ybottom[x], 0x0000FF,0x0000AA,0x0000FF, game);
-
+			
+			#ifdef ft_line
+				ft_vline(game->sdl.surface,&(t_point){x,cyb+1},&(t_point){x, ybottom[x]},0x0000FF);
+			#else
+				vline(game->sdl.surface, x, cyb+1, ybottom[x], 0x0000FF); //floor in a sector we are in
+			#endif
 			/* Is there another sector behind this edge? */
 			if(neighbor >= 0)
 			{
@@ -220,24 +224,46 @@ static void DrawScreen(t_game *game)
 				int nyb = (x - x1) * (ny2b-ny1b) / (x2-x1) + ny1b, cnyb = clamp(nyb, ytop[x],ybottom[x]);
 				/* If our ceiling is higher than their ceiling, render upper wall */
 				unsigned r1 = 0x010101 * (255-z), r2 = 0x040007 * (31-z/8);
-				//vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
+
+			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r1);
-				ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
-				/* If our floor is lower than their floor, render bottom wall */
-			  	//vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
+			#else
+				vline(game->sdl.surface, x, cya, cnya-1, x==x1||x==x2 ? 0 : r1);
+			#endif
+			// 	//vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
+				
+			ytop[x] = clamp(max(cya, cnya), ytop[x], H-1);   // Shrink the remaining window below these ceilings
+			// 	/* If our floor is lower than their floor, render bottom wall */
+
+			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r2);
+			#else
+				vline(  game->sdl.surface, x, cnyb+1, cyb,  x==x1||x==x2 ? 0 : r2);
+			#endif
+			//   	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
+				
 				ybottom[x] = clamp(min(cyb, cnyb), 0, ybottom[x]); // Shrink the remaining window above these floors
 			}
 			else
 			{
 				/* There's no neighbor. Render wall from top (cya = ceiling level) to bottom (cyb = floor level). */
 				unsigned r = 0x010101 * (255-z);
-				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);//x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);	
+			#ifdef ft_line
+				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
+			#else
+				vline(  game->sdl.surface, x, cya, cyb, x==x1||x==x2 ? 0 : r);
+			#endif
+				//x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);	
 				//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
 			}
 			unsigned r = 0x010101 * (255-z);
+			#ifdef ft_line
+				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
+			#else
+				vline(game->sdl.surface, x, cya, cyb, x==x1||x==x2 ? 0 : r); //render how we see them
+			#endif
 			//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
-			ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
+			
 		}
 		/* Schedule the neighboring sector for rendering within the window formed by this wall. */
 		if(neighbor >= 0 && endx >= beginx && (head+MaxQueue+1-tail)%MaxQueue)
@@ -338,6 +364,10 @@ int ft_input_check(void *main, SDL_Event *ev)
 	switch(ev->type)
 	{
 		case SDL_KEYDOWN:
+		switch(ev->key.keysym.sym)
+		{
+			case 'f': ft_ppm_image_write(game->sdl.surface); break;
+		}
 		case SDL_KEYUP:
 			switch(ev->key.keysym.sym)
 			{
@@ -350,6 +380,7 @@ int ft_input_check(void *main, SDL_Event *ev)
 					break;
 				case SDLK_ESCAPE: ft_exit(NULL); /* duck */
 				case SDLK_RCTRL: game->ducking = ev->type==SDL_KEYDOWN; game->falling=1; break;
+				
 				default: break;
 			}
 			break;
@@ -360,17 +391,25 @@ int ft_input_check(void *main, SDL_Event *ev)
 
 void		ft_update(t_game *game)
 {	
+	clock_t current_ticks, delta_ticks;
+	clock_t fps = 0;
+
 	while (1)
 	{
+		 current_ticks = clock();
 		ft_surface_clear(game->sdl.surface);
 
 		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
-		ft_input(game, ft_input_check);
 		ft__player_collision(game);
 		DrawScreen(game);
+		ft_input(game, ft_input_check);
 
-
+		//ft_plot_wline(game->sdl.surface, &(t_fpoint){500, 200}, &(t_fpoint){300, 500}, 0xFF0000);
 		ft_surface_present(&game->sdl, game->sdl.surface);
+		 delta_ticks = clock() - current_ticks; //the time, in ms, that took to render the scene
+    if(delta_ticks > 0)
+        fps = CLOCKS_PER_SEC / delta_ticks;
+	printf("fps :%lu\n", fps);
 		SDL_Delay(10);
 	}
 }
