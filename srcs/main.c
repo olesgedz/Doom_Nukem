@@ -89,12 +89,19 @@ static void UnloadData()
 
 //static Uint32	 *surface = NULL;
 /* vline: Draw a vertical line on screen, with a different color pixel in top & bottom */
-static void vline(t_surface *surface, int x, int y1,int y2, int color)
+// static void vline(t_surface *surface, int x, int y1,int y2, int color)
+// {
+// 	int *pix = (int*) surface->data;
+// 	 y1 = clamp(y1, 0, WIN_H-1);
+// 	 y2 = clamp(y2, 0, WIN_H-1);
+// 	for(int y=y1+1; y<y2; ++y) pix[y* surface->width+x] = color;
+// }
+static void vline(t_texture *texture, int x, int y1,int y2, int color)
 {
-	int *pix = (int*) surface->data;
+	int *pix = (int*) texture->pixels;
 	 y1 = clamp(y1, 0, WIN_H-1);
 	 y2 = clamp(y2, 0, WIN_H-1);
-	for(int y=y1+1; y<y2; ++y) pix[y* surface->width+x] = color;
+	for(int y=y1+1; y<y2; ++y) pix[y * texture->width + x] = color;
 }
 /* MovePlayer(dx,dy): Moves the player by (dx,dy) in the map, and
  * also updates their anglesin/anglecos/sector properties properly.
@@ -206,15 +213,14 @@ static void DrawScreen(t_game *game)
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,ytop[x]},&(t_point){x,cya-1},0x111111);
 			#else
-				vline(game->sdl.surface, x, ytop[x], cya-1, 0x500050);
+				vline(game->sdl.texture, x, ytop[x], cya-1, 0x500050);
 			#endif
-			//
 			/* Render floor: everything below this sector's floor height. */
 			
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cyb+1},&(t_point){x, ybottom[x]},0x0000FF);
 			#else
-				vline(game->sdl.surface, x, cyb+1, ybottom[x], 0x0000FF); //floor in a sector we are in
+				vline(game->sdl.texture, x, cyb+1, ybottom[x], 0x0000FF); //floor in a sector we are in
 			#endif
 			/* Is there another sector behind this edge? */
 			if(neighbor >= 0)
@@ -228,7 +234,7 @@ static void DrawScreen(t_game *game)
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r1);
 			#else
-				vline(game->sdl.surface, x, cya, cnya-1, x==x1||x==x2 ? 0 : r1);
+				vline(game->sdl.texture, x, cya, cnya-1, x==x1||x==x2 ? 0 : r1);
 			#endif
 			// 	//vline(x, cya, cnya-1, 0, x==x1||x==x2 ? 0 : r1, 0, game); // Between our and their ceiling
 				
@@ -238,7 +244,7 @@ static void DrawScreen(t_game *game)
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r2);
 			#else
-				vline(  game->sdl.surface, x, cnyb+1, cyb,  x==x1||x==x2 ? 0 : r2);
+				vline(game->sdl.texture, x, cnyb+1, cyb,  x==x1||x==x2 ? 0 : r2);
 			#endif
 			//   	vline(x, cnyb+1, cyb, 0, x==x1||x==x2 ? 0 : r2, 0, game); // Between their and our floor
 				
@@ -251,7 +257,7 @@ static void DrawScreen(t_game *game)
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
 			#else
-				vline(  game->sdl.surface, x, cya, cyb, x==x1||x==x2 ? 0 : r);
+				vline(game->sdl.texture, x, cya, cyb, x==x1||x==x2 ? 0 : r);
 			#endif
 				//x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);	
 				//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
@@ -260,7 +266,7 @@ static void DrawScreen(t_game *game)
 			#ifdef ft_line
 				ft_vline(game->sdl.surface,&(t_point){x,cya},&(t_point){x,cyb},r);
 			#else
-				vline(game->sdl.surface, x, cya, cyb, x==x1||x==x2 ? 0 : r); //render how we see them
+				vline(game->sdl.texture, x, cya, cyb, x==x1||x==x2 ? 0 : r); //render how we see them
 			#endif
 			//vline(x, cya, cyb, 0, x==x1||x==x2 ? 0 : r, 0, game);
 			
@@ -402,24 +408,28 @@ void		ft_update(t_game *game)
 
 		//vline(50, 50, 500, 0xFF0000 ,0x00FF00, 0x0000FF, &game);
 		ft__player_collision(game);
-		//DrawScreen(game);
-		ft_input(game, ft_input_check);
-		ft_texture_lock(&game->sdl);
+		ft_texture_lock(&game->sdl, game->sdl.texture);
+		DrawScreen(game);
+
 		// ft_plot_wline(game->sdl.surface, &(t_fpoint){500, 200}, &(t_fpoint){300, 500}, 0xFF0000);
 		// ft_plot_line(game->sdl.surface, &(t_point){450, 150}, &(t_point){250, 450}, 0xFF0000);
-		for (int y = 0; y < 500; y++)
-		{
-			for(int x = 0; x < 500; x++)
-				game->sdl.pixels[x + y * 500] = 0xFF0000;
-		}
+		
+		ft_input(game, ft_input_check);
+		
+		// for (int y = 0; y < 500; y++)
+		// {
+		// 	for(int x = 0; x < 500; x++)
+		// 		game->sdl.texture->pixels[x + y * 500] = 0xFF0000;
+		// }
+		//vline(game->sdl.texture, 500, 200, 400, 0xff0000);
 
 		//ft_surface_present(&game->sdl, game->sdl.surface);
 		 delta_ticks = clock() - current_ticks; //the time, in ms, that took to render the scene
     if(delta_ticks > 0)
         fps = CLOCKS_PER_SEC / delta_ticks;
 	printf("fps :%lu\n", fps);
-		SDL_Delay(10);
-		ft_texture_present(&game->sdl);
+		SDL_Delay(20);
+		ft_texture_present(&game->sdl, game->sdl.texture);
 	}
 }
 
