@@ -428,7 +428,6 @@ void		ft_update(t_game *game)
     if(delta_ticks > 0)
         fps = CLOCKS_PER_SEC / delta_ticks;
 	printf("fps :%lu\n", fps);
-		SDL_Delay(20);
 		ft_texture_present(&game->sdl, game->sdl.texture);
 	}
 }
